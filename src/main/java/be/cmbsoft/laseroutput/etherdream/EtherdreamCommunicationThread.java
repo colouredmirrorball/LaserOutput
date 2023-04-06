@@ -1,8 +1,5 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import cmb.soft.cgui.CGui;
-import ilda.IldaPoint;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +9,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+
+import ilda.IldaPoint;
+
+import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 
 public class EtherdreamCommunicationThread extends Thread
 {
@@ -79,7 +80,7 @@ public class EtherdreamCommunicationThread extends Thread
                     sendPrepareStreamCommand = false;
                 } else messageToSend = messages.take();
 
-                CGui.log("Sending command " + messageToSend.getCommandChar());
+                log("Sending command " + messageToSend.getCommandChar());
                 output.write(messageToSend.getBytes());
                 output.flush();
                 lastMessage = messageToSend;
@@ -116,7 +117,7 @@ public class EtherdreamCommunicationThread extends Thread
      */
     void addMessage(EtherdreamCommand message)
     {
-        CGui.log("Adding message to queue: " + message.getCommandChar());
+        log("Adding message to queue: " + message.getCommandChar());
         try
         {
             messages.put(message);
@@ -137,7 +138,7 @@ public class EtherdreamCommunicationThread extends Thread
             {
                 case NAK_FULL:
                     // BUG: the Etherdream does not send a NAK_FULL but a NAK_INVALID when buffer is full!
-                    CGui.log("Buffer full, don't send so many points pl0x");
+                    log("Buffer full, don't send so many points pl0x");
                     break;
                 case NAK_INVALID:
                     // Some ad hoc troubleshooting
@@ -146,28 +147,28 @@ public class EtherdreamCommunicationThread extends Thread
                     {
                         // The thing that went wrong is that the ED, for some reason, is confused - it should be IDLE
                         sendPrepareStreamCommand = true;
-                        CGui.log("Etherdream wasn't prepared...");
+                        log("Etherdream wasn't prepared...");
                     } else if (lastMessage.getCommandChar() == 'd')
                     {
-                        CGui.log("Invalid data command: " + response.getCommand());
+                        log("Invalid data command: " + response.getCommand());
                         boolean passedCheck = ((EtherdreamWriteDataCommand) lastMessage).verify(lastMessage.getBytes());
                         if (!passedCheck)
                         {
-                            CGui.log("Data was not properly formatted...");
+                            log("Data was not properly formatted...");
                         }
                     } else
                     {
-                        CGui.log("Invalid command: " + response.getCommand());
+                        log("Invalid command: " + response.getCommand());
                     }
                     break;
                 case NAK_STOP_CONDITION:
-                    CGui.log("Etherdream is in a stop condition!");
+                    log("Etherdream is in a stop condition!");
                     break;
                 default:
             }
         } else
         {
-            CGui.log("ACK received for command " + response.getCommand());
+            log("ACK received for command " + response.getCommand());
         }
         lastStatus = response.getStatus();
     }
@@ -216,7 +217,7 @@ public class EtherdreamCommunicationThread extends Thread
         if (lastStatus == null || EtherdreamPlaybackState.IDLE == lastStatus.getPlaybackState())
         {
             sendPrepareStreamCommand = true;
-            CGui.log("Put Etherdream in prepared state");
+            log("Put Etherdream in prepared state");
         }
         if (lastStatus != null && EtherdreamPlaybackState.PREPARED == lastStatus.getPlaybackState())
         {

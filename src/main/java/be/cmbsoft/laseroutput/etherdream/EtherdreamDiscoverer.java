@@ -1,12 +1,12 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import cmb.soft.cgui.CGui;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Map;
+
+import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 
 /**
  * This class will listen to incoming broadcasts sent every second by the device. It will discover new devices and
@@ -40,11 +40,11 @@ public class EtherdreamDiscoverer implements Runnable
                 String mac = broadcast.getMac();
                 synchronized (devices)
                 {
-                    CGui.log("found device in discoverer");
+                    log("found device in discoverer");
                     Etherdream etherdream = devices.get(mac);
                     if (etherdream == null)
                     {
-                        CGui.log("Found an Etherdream: " + mac);
+                        log("Found an Etherdream: " + mac);
                         devices.put(mac, new Etherdream(address, broadcast));
                     } else
                     {

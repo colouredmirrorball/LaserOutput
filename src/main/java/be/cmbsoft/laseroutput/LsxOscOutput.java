@@ -1,12 +1,16 @@
 package be.cmbsoft.laseroutput;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collections;
 import java.util.List;
 
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCSerializeException;
+import com.illposed.osc.transport.OSCPortOut;
 import ilda.IldaPoint;
-import netP5.NetAddress;
-import oscP5.OscMessage;
 import processing.core.PApplet;
 
 /**
@@ -15,28 +19,33 @@ import processing.core.PApplet;
 public class LsxOscOutput extends LaserOutput
 {
     private final ByteBuffer b;
-//    private final OscP5 osc;
-    private int timeline;
-    private int destinationFrame;
-    private NetAddress destination;
+    private final String     ip;
+    private final int        port;
+    private       int        timeline;
+    private       int        destinationFrame;
+    private       OSCPortOut outputPort;
 
-    public LsxOscOutput(int timeline, int destinationFrame, NetAddress destination)
+    public LsxOscOutput(int timeline, int destinationFrame, String ip, int port)
     {
-//        osc = new OscP5(parent, 4850);
         this.timeline = timeline;
         this.destinationFrame = destinationFrame;
-        this.destination = destination;
+        this.ip = ip;
+        this.port = port;
         b = ByteBuffer.allocate(45068); //largest point count LSX can handle is 4096
         b.order(ByteOrder.LITTLE_ENDIAN);
         setName("LSX OSC output");
     }
 
+    public static float map(float value,
+        float start1, float stop1,
+        float start2, float stop2)
+    {
+        return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+    }
+
     @Override
     public synchronized void project(List<IldaPoint> points)
     {
-
-        OscMessage m = new OscMessage("/LSX_0/Frame");
-
         int pointCount = points.size();
         b.position(0);
 
@@ -86,9 +95,9 @@ public class LsxOscOutput extends LaserOutput
             b.put((byte) 0);
 
 
-            int red = (point.getColour() >> 16) & 0xFF;
+            int red   = (point.getColour() >> 16) & 0xFF;
             int green = (point.getColour() >> 8) & 0xFF;
-            int blue = (point.getColour() & 0xFF);
+            int blue  = (point.getColour() & 0xFF);
 
             if (point.isBlanked())
             {
@@ -102,17 +111,39 @@ public class LsxOscOutput extends LaserOutput
             b.put((byte) blue);
         }
 
-        //Add the blob to the OSC message
-        m.add(b.array());
+        OSCMessage message = new OSCMessage("/LSX_0/Frame", Collections.singletonList(b.array()));
 
-//        osc.send(m, destination);              // send the OSC message to the remote location defined in setup()
+        OSCPortOut oscPort = getOscPort();
+        try
+        {
+            oscPort.send(message);
+        }
+        catch (IOException | OSCSerializeException exception)
+        {
+            throw new RuntimeException(exception);
+        }
         b.clear();
     }
 
-    public static float map(float value,
-        float start1, float stop1,
-        float start2, float stop2) {
-        return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+    private OSCPortOut getOscPort()
+    {
+        try
+        {
+            if (outputPort == null)
+            {
+                outputPort = new OSCPortOut(new InetSocketAddress(ip, port));
+            }
+            if (!outputPort.isConnected())
+            {
+                outputPort.connect();
+            }
+        }
+        catch (IOException exception)
+        {
+            throw new RuntimeException(exception);
+        }
+
+        return outputPort;
     }
 
     public int getTimeline()
@@ -133,16 +164,6 @@ public class LsxOscOutput extends LaserOutput
     public void setDestinationFrame(int destinationFrame)
     {
         this.destinationFrame = destinationFrame;
-    }
-
-    public NetAddress getDestination()
-    {
-        return destination;
-    }
-
-    public void setDestination(NetAddress destination)
-    {
-        this.destination = destination;
     }
 
 

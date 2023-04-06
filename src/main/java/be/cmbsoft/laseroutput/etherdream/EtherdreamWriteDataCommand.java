@@ -1,14 +1,14 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import cmb.soft.cgui.CGui;
-import ilda.IldaPoint;
-import processing.core.PVector;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
+import ilda.IldaPoint;
+import processing.core.PVector;
+
+import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static java.lang.Math.max;
 
 public class EtherdreamWriteDataCommand implements EtherdreamCommand
@@ -88,7 +88,7 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
         float checkSize = ((bytes.length - 3) / 18f) % 1;
         if (checkSize != 0)
         {
-            CGui.log("Buffer size mismatch");
+            log("Buffer size mismatch");
             verified = false;
         }
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -96,20 +96,21 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
         byte commandCharacter = buffer.get();
         if (commandCharacter != 'd')
         {
-            CGui.log("Invalid command character: " + commandCharacter);
+            log("Invalid command character: " + commandCharacter);
             verified = false;
         }
         short pointCount = buffer.getShort();
         if (pointCount * 18 + 3 != bytes.length)
         {
-            CGui.log("Byte array length mismatch, " + bytes.length + " bytes in message but announced " + pointCount + " points or " + (pointCount * 18 + 3) + " bytes");
+            log("Byte array length mismatch, " + bytes.length + " bytes in message but announced " + pointCount +
+                " points or " + (pointCount * 18 + 3) + " bytes");
         }
         List<IldaPoint> receivedPoints = new ArrayList<>(pointCount);
         for (int i = 0; i < pointCount; i++)
         {
             if (buffer.getShort() != 0)
             {
-                CGui.log("control was not 0");
+                log("control was not 0");
                 verified = false;
             }
             short x = buffer.getShort();
@@ -120,12 +121,12 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
             short intensity = buffer.getShort();
             if (buffer.getShort() != 0)
             {
-                CGui.log("u1 was not 0");
+                log("u1 was not 0");
                 verified = false;
             }
             if (buffer.getShort() != 0)
             {
-                CGui.log("u2 was not 0");
+                log("u2 was not 0");
                 verified = false;
             }
             IldaPoint point = new IldaPoint(x * INVERSE_HALF_FULL_SCALE, y * INVERSE_HALF_FULL_SCALE, 0,
@@ -134,7 +135,7 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
             PVector position = point.getPosition();
             if (position.x < -1 || position.x > 1 || position.y < -1 || position.y > 1)
             {
-                CGui.log("invalid position");
+                log("invalid position");
                 verified = false;
             }
             receivedPoints.add(point);
@@ -145,7 +146,7 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
             IldaPoint originalPoint = points.get(i);
             if (!receivedPoint.equals(originalPoint))
             {
-//                 CGui.log("Point mismatch");
+//                 log("Point mismatch");
                 verified = false;
             }
         }

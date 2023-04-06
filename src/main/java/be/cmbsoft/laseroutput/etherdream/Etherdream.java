@@ -1,9 +1,9 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import ilda.IldaPoint;
-
 import java.net.InetAddress;
 import java.util.List;
+
+import ilda.IldaPoint;
 
 public class Etherdream
 {
@@ -53,4 +53,11 @@ public class Etherdream
     {
         return broadcast;
     }
+
+    public static void log(String message)
+    {
+        //TODO improve logging somehow
+        System.out.println(message);
+    }
+
 }
