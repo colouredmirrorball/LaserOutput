@@ -7,15 +7,15 @@ import ilda.IldaPoint;
 
 public class Etherdream
 {
-    private final EtherdreamCommunicationThread2 thread;
-    private EtherdreamBroadcast broadcast;
-    private boolean connectionFailed = false;
+    private final EtherdreamCommunicationThread thread;
+    private       EtherdreamBroadcast           broadcast;
+    private       boolean                       connectionFailed = false;
 
 
     public Etherdream(InetAddress address, EtherdreamBroadcast broadcast)
     {
         this.broadcast = broadcast;
-        thread = new EtherdreamCommunicationThread2(address, this);
+        thread = new EtherdreamCommunicationThread(address, this);
         thread.start();
     }
 

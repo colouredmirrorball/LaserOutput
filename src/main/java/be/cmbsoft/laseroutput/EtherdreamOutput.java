@@ -1,12 +1,12 @@
 package be.cmbsoft.laseroutput;
 
-import be.cmbsoft.laseroutput.etherdream.Etherdream;
-import be.cmbsoft.laseroutput.etherdream.EtherdreamDiscoverer;
-import ilda.IldaPoint;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+
+import be.cmbsoft.laseroutput.etherdream.Etherdream;
+import be.cmbsoft.laseroutput.etherdream.EtherdreamDiscoverer;
+import ilda.IldaPoint;
 
 public class EtherdreamOutput extends LaserOutput
 {
@@ -44,4 +44,10 @@ public class EtherdreamOutput extends LaserOutput
         discoverer.stop();
         super.halt();
     }
+
+    public int getDetectedDevices()
+    {
+        return devices.size();
+    }
+
 }
