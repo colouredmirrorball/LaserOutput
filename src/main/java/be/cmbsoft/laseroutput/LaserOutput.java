@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import ilda.IldaFrame;
 import ilda.IldaPoint;
+import ilda.IldaRenderer;
 
 /**
  * @author Florian Created on 27/01/2020
@@ -107,6 +108,22 @@ public abstract class LaserOutput extends Thread
     }
 
     public abstract void project(List<IldaPoint> points) throws IOException;
+
+    public void project(IldaFrame frame) {
+        Optional.ofNullable(frame).ifPresent(f -> {
+            try {
+                project(f.getPoints());
+            } catch (IOException exception) {
+                throw new RuntimeException(exception);
+            }
+        });
+    }
+
+    public void project(IldaRenderer renderer) {
+        Optional.ofNullable(renderer)
+                .map(IldaRenderer::getCurrentFrame)
+                .ifPresent(this::project);
+    }
 
     public Mode getMode()
     {

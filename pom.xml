@@ -18,16 +18,19 @@
             <groupId>com.cmbsoft</groupId>
             <artifactId>Ilda</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.illposed.osc</groupId>
             <artifactId>javaosc-core</artifactId>
             <version>0.9-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.processing</groupId>
             <artifactId>core</artifactId>
             <version>4.2</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
