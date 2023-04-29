@@ -18,6 +18,7 @@ public abstract class AbstractOutputTest
     protected IldaFrame generateSquare()
     {
         IldaRenderer renderer = new IldaRenderer(null, 200, 200);
+        renderer.setOptimise(false);
         renderer.beginDraw();
         renderer.stroke(renderer.color(0, 255, 0));
         renderer.rect(50, 50, 100, 100);

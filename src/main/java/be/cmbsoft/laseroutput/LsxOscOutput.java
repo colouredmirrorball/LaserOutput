@@ -17,13 +17,14 @@ import java.util.List;
  * @author Florian Created on 27/01/2020
  */
 public class LsxOscOutput extends LaserOutput {
+    public static final String DEFAULT_ROOT_NAME = "LSX_0";
     private final ByteBuffer b;
     private final String ip;
     private final int port;
     private int timeline;
     private int destinationFrame;
     private OSCPortOut outputPort;
-    private String rootName = "LSX_0";
+    private String rootName = DEFAULT_ROOT_NAME;
 
     public LsxOscOutput(int timeline, int destinationFrame, String ip, int port) {
         this.timeline = timeline;
@@ -145,7 +146,7 @@ public class LsxOscOutput extends LaserOutput {
     }
 
     public String getRootName() {
-        return rootName;
+        return rootName == null ? rootName = DEFAULT_ROOT_NAME : rootName;
     }
 
     public void setRootName(String rootName) {
