@@ -1,5 +1,6 @@
 package be.cmbsoft.laseroutput;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import ilda.IldaFrame;
@@ -13,7 +14,7 @@ class LsxOscOutputTest extends AbstractOutputTest
 
         IldaFrame    ildaFrame = generateCircle();
         LsxOscOutput output    = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        output.project(ildaFrame);
+        Assertions.assertDoesNotThrow(() -> output.project(ildaFrame));
 
     }
 
@@ -22,11 +23,20 @@ class LsxOscOutputTest extends AbstractOutputTest
     {
 
         IldaFrame    ildaFrame = generateSquare();
-        LsxOscOutput output    = new LsxOscOutput(1, 11, "127.0.0.1", 10000);
-        output.project(ildaFrame);
+        LsxOscOutput output    = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
+        Assertions.assertDoesNotThrow(() -> output.project(ildaFrame));
 
     }
 
+    @Test
+    void sendTriangle()
+    {
+
+        IldaFrame    ildaFrame = generateTriangle();
+        LsxOscOutput output    = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
+        Assertions.assertDoesNotThrow(() -> output.project(ildaFrame));
+
+    }
 
 
 }

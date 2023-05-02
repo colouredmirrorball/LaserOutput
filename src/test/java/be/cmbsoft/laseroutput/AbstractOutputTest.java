@@ -26,4 +26,15 @@ public abstract class AbstractOutputTest
         return renderer.getCurrentFrame();
     }
 
+    protected IldaFrame generateTriangle()
+    {
+        IldaRenderer renderer = new IldaRenderer(null, 200, 200);
+        renderer.setOptimise(false);
+        renderer.beginDraw();
+        renderer.stroke(renderer.color(0, 0, 255));
+        renderer.triangle(50, 150, 100, 50, 150, 150);
+        renderer.endDraw();
+        return renderer.getCurrentFrame();
+    }
+
 }
