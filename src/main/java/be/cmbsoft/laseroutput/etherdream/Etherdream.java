@@ -60,4 +60,9 @@ public class Etherdream
         System.out.println(message);
     }
 
+    public static void logException(Exception exception)
+    {
+        exception.printStackTrace();
+    }
+
 }

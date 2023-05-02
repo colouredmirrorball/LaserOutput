@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.util.Map;
 
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
+import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
 
 /**
  * This class will listen to incoming broadcasts sent every second by the device. It will discover new devices and
@@ -53,20 +54,7 @@ public class EtherdreamDiscoverer implements Runnable
                 }
             } catch (IOException exception)
             {
-
-                exception.printStackTrace();
-                /*
-                try
-                {
-                    // Wait for a bit to save the CPU
-                    Thread.sleep(1000);
-                } catch (InterruptedException e)
-                {
-                    interrupted = true;
-                    Thread.currentThread().interrupt();
-                }
-
-                 */
+                logException(exception);
             }
         }
     }
