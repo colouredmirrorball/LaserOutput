@@ -1,7 +1,7 @@
 package be.cmbsoft.laseroutput;
 
-import ilda.IldaFrame;
-import ilda.IldaRenderer;
+import be.cmbsoft.ilda.IldaFrame;
+import be.cmbsoft.ilda.IldaRenderer;
 
 public abstract class AbstractOutputTest
 {

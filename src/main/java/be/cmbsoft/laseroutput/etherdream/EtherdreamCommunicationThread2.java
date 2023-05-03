@@ -1,7 +1,5 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import ilda.IldaPoint;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +10,8 @@ import java.nio.ByteOrder;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import be.cmbsoft.ilda.IldaPoint;
+
 public class EtherdreamCommunicationThread2 extends Thread {
 
     private final Etherdream etherdream;
@@ -21,7 +21,7 @@ public class EtherdreamCommunicationThread2 extends Thread {
     private InputStream input;
     private int targetPps;
     boolean stopped = false;
-    private ArrayBlockingQueue<IldaPoint> points = new ArrayBlockingQueue<>(4000);
+    private final ArrayBlockingQueue<IldaPoint> points = new ArrayBlockingQueue<>(4000);
     private EtherdreamStatus currentStatus;
 
     EtherdreamCommunicationThread2(InetAddress address, Etherdream etherdream) {

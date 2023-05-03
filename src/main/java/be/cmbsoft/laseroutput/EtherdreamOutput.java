@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.laseroutput.etherdream.Etherdream;
 import be.cmbsoft.laseroutput.etherdream.EtherdreamDiscoverer;
-import ilda.IldaPoint;
 
 public class EtherdreamOutput extends LaserOutput
 {

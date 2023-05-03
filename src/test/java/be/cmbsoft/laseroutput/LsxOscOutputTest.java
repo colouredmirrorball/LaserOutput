@@ -1,9 +1,8 @@
 package be.cmbsoft.laseroutput;
 
+import be.cmbsoft.ilda.IldaFrame;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import ilda.IldaFrame;
 
 class LsxOscOutputTest extends AbstractOutputTest
 {

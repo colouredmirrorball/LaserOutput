@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import ilda.IldaFrame;
-import ilda.IldaPoint;
-import ilda.IldaRenderer;
+import be.cmbsoft.ilda.IldaFrame;
+import be.cmbsoft.ilda.IldaPoint;
+import be.cmbsoft.ilda.IldaRenderer;
 
 /**
  * @author Florian Created on 27/01/2020

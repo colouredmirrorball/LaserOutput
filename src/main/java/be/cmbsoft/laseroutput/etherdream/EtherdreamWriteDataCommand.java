@@ -5,11 +5,10 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import ilda.IldaPoint;
-import processing.core.PVector;
-
+import be.cmbsoft.ilda.IldaPoint;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static java.lang.Math.max;
+import processing.core.PVector;
 
 public class EtherdreamWriteDataCommand implements EtherdreamCommand
 {
@@ -144,10 +143,10 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
         {
             IldaPoint receivedPoint = receivedPoints.get(i);
             IldaPoint originalPoint = points.get(i);
-            if (!receivedPoint.equals(originalPoint))
-            {
+            if (!receivedPoint.equals(originalPoint)) {
 //                 log("Point mismatch");
                 verified = false;
+                break;
             }
         }
         return verified;

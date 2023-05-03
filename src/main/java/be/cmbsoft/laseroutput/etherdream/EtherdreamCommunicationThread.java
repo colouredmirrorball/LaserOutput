@@ -10,8 +10,7 @@ import java.nio.ByteOrder;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import ilda.IldaPoint;
-
+import be.cmbsoft.ilda.IldaPoint;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 
 public class EtherdreamCommunicationThread extends Thread

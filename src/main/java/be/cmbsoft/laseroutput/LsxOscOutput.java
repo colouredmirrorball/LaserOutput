@@ -1,17 +1,17 @@
 package be.cmbsoft.laseroutput;
 
-import com.illposed.osc.OSCMessage;
-import com.illposed.osc.OSCSerializeException;
-import com.illposed.osc.transport.OSCPortOut;
-import ilda.IldaPoint;
-import processing.core.PApplet;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
+
+import be.cmbsoft.ilda.IldaPoint;
+import com.illposed.osc.OSCMessage;
+import com.illposed.osc.OSCSerializeException;
+import com.illposed.osc.transport.OSCPortOut;
+import processing.core.PApplet;
 
 /**
  * @author Florian Created on 27/01/2020

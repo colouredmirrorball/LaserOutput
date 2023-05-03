@@ -3,7 +3,7 @@ package be.cmbsoft.laseroutput.etherdream;
 import java.net.InetAddress;
 import java.util.List;
 
-import ilda.IldaPoint;
+import be.cmbsoft.ilda.IldaPoint;
 
 public class Etherdream
 {
