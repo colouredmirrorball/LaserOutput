@@ -7,6 +7,8 @@ import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import be.cmbsoft.ilda.IldaPoint;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCSerializeException;
@@ -17,14 +19,15 @@ import processing.core.PApplet;
  * @author Florian Created on 27/01/2020
  */
 public class LsxOscOutput extends LaserOutput {
-    public static final String DEFAULT_ROOT_NAME = "LSX_0";
-    private final ByteBuffer b;
-    private final String ip;
-    private final int port;
-    private int timeline;
-    private int destinationFrame;
-    private OSCPortOut outputPort;
-    private String rootName = DEFAULT_ROOT_NAME;
+    public static final String          DEFAULT_ROOT_NAME = "LSX_0";
+    private final       ByteBuffer      b;
+    private final       String          ip;
+    private final       int             port;
+    private             int             timeline;
+    private             int             destinationFrame;
+    private             OSCPortOut      outputPort;
+    private             String          rootName          = DEFAULT_ROOT_NAME;
+    private             List<IldaPoint> previousMessagePoints;
 
     public LsxOscOutput(int timeline, int destinationFrame, String ip, int port) {
         this.timeline = timeline;
@@ -41,8 +44,18 @@ public class LsxOscOutput extends LaserOutput {
     }
 
     @Override
-    public synchronized void project(List<IldaPoint> points) {
+    public synchronized void project(List<IldaPoint> points)
+    {
+
         int pointCount = points.size();
+        // Do not send anything if nothing changed
+        if (previousMessagePoints != null && pointCount == previousMessagePoints.size() &&
+            CollectionUtils.isEqualCollection(previousMessagePoints, points))
+        {
+            return;
+        }
+
+
         b.position(0);
 
         // LSX frame OSC message
@@ -112,6 +125,7 @@ public class LsxOscOutput extends LaserOutput {
             throw new RuntimeException(exception);
         }
         b.clear();
+        previousMessagePoints = points;
     }
 
     private OSCPortOut getOscPort() {
