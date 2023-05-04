@@ -1,6 +1,5 @@
 package be.cmbsoft.laseroutput;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +44,8 @@ public abstract class LaserOutput extends Thread
                 long sleepTime = getSleepTime(lastTime, lastFramePointCount);
                 lastTime = System.currentTimeMillis();
                 sleep(sleepTime);
-            } catch (InterruptedException | IOException exception)
+            }
+            catch (InterruptedException exception)
             {
                 interrupt();
                 interrupted = true;
@@ -107,16 +107,10 @@ public abstract class LaserOutput extends Thread
         return this;
     }
 
-    public abstract void project(List<IldaPoint> points) throws IOException;
+    public abstract void project(List<IldaPoint> points);
 
     public void project(IldaFrame frame) {
-        Optional.ofNullable(frame).ifPresent(f -> {
-            try {
-                project(f.getPoints());
-            } catch (IOException exception) {
-                throw new RuntimeException(exception);
-            }
-        });
+        Optional.ofNullable(frame).ifPresent(f -> project(f.getPoints()));
     }
 
     public void project(IldaRenderer renderer) {
@@ -145,4 +139,14 @@ public abstract class LaserOutput extends Thread
     {
         interrupted = true;
     }
+
+
+    /**
+     * This method sends an empty frame, which can be useful to disable output.
+     */
+    public void sendEmptyFrame()
+    {
+        project(Collections.emptyList());
+    }
+
 }
