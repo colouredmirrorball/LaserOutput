@@ -7,8 +7,6 @@ import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections4.CollectionUtils;
-
 import be.cmbsoft.ilda.IldaPoint;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCSerializeException;
@@ -46,16 +44,7 @@ public class LsxOscOutput extends LaserOutput {
     @Override
     public synchronized void project(List<IldaPoint> points)
     {
-
         int pointCount = points.size();
-        // Do not send anything if nothing changed
-        if (previousMessagePoints != null && pointCount == previousMessagePoints.size() &&
-            CollectionUtils.isEqualCollection(previousMessagePoints, points))
-        {
-            return;
-        }
-
-
         b.position(0);
 
         // LSX frame OSC message
