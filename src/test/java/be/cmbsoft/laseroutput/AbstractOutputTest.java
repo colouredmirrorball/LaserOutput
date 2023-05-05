@@ -2,6 +2,7 @@ package be.cmbsoft.laseroutput;
 
 import be.cmbsoft.ilda.IldaFrame;
 import be.cmbsoft.ilda.IldaRenderer;
+import processing.core.PApplet;
 
 public abstract class AbstractOutputTest
 {
@@ -26,13 +27,25 @@ public abstract class AbstractOutputTest
         return renderer.getCurrentFrame();
     }
 
-    protected IldaFrame generateTriangle()
-    {
+    protected IldaFrame generateTriangle() {
         IldaRenderer renderer = new IldaRenderer(null, 200, 200);
         renderer.setOptimise(false);
         renderer.beginDraw();
         renderer.stroke(renderer.color(0, 0, 255));
         renderer.triangle(50, 150, 100, 50, 150, 150);
+        renderer.endDraw();
+        return renderer.getCurrentFrame();
+    }
+
+    protected IldaFrame generateText() {
+        PApplet applet = new PApplet();
+        PApplet.runSketch(new String[]{getClass().getCanonicalName()}, applet);
+        IldaRenderer renderer = new IldaRenderer(applet, 200, 200);
+        renderer.setOptimise(false);
+        renderer.beginDraw();
+        renderer.stroke(renderer.color(0, 0, 255));
+        renderer.textSize(50);
+        renderer.text("This is a long text that should overflow the bounds", 10, 100);
         renderer.endDraw();
         return renderer.getCurrentFrame();
     }

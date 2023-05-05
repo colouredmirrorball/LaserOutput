@@ -28,11 +28,19 @@ class LsxOscOutputTest extends AbstractOutputTest
     }
 
     @Test
-    void sendTriangle()
-    {
+    void sendTriangle() {
 
-        IldaFrame    ildaFrame = generateTriangle();
-        LsxOscOutput output    = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
+        IldaFrame ildaFrame = generateTriangle();
+        LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
+        Assertions.assertDoesNotThrow(() -> output.project(ildaFrame));
+
+    }
+
+    @Test
+    void sendText() {
+
+        IldaFrame ildaFrame = generateText();
+        LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
         Assertions.assertDoesNotThrow(() -> output.project(ildaFrame));
 
     }
