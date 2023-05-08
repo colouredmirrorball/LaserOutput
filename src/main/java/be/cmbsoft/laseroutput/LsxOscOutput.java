@@ -25,7 +25,6 @@ public class LsxOscOutput extends LaserOutput {
     private             int             destinationFrame;
     private             OSCPortOut      outputPort;
     private             String          rootName          = DEFAULT_ROOT_NAME;
-    private             List<IldaPoint> previousMessagePoints;
 
     public LsxOscOutput(int timeline, int destinationFrame, String ip, int port) {
         this.timeline = timeline;
@@ -114,7 +113,6 @@ public class LsxOscOutput extends LaserOutput {
             throw new RuntimeException(exception);
         }
         b.clear();
-        previousMessagePoints = points;
     }
 
     private OSCPortOut getOscPort() {
