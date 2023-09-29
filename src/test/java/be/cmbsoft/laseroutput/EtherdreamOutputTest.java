@@ -14,7 +14,7 @@ class EtherdreamOutputTest extends AbstractOutputTest
         long             now       = System.currentTimeMillis();
         while (output.getDetectedDevices() == 0)
         {
-            Thread.sleep(100);
+            Thread.sleep(2000);
             if (System.currentTimeMillis() - now > 5000)
             {
                 System.out.println("No devices found :(");
@@ -22,7 +22,7 @@ class EtherdreamOutputTest extends AbstractOutputTest
             }
         }
         output.project(ildaFrame.getCopyOnWritePoints());
-        Thread.sleep(500);
+        Thread.sleep(5000);
         output.halt();
     }
 

@@ -4,16 +4,16 @@ import java.nio.ByteBuffer;
 
 public class EtherdreamStatus
 {
-    private final int protocol;
+    private final int                        protocol;
     private final EtherdreamLightEngineState lightEngineState;
-    private final EtherdreamPlaybackState playbackState;
-    private final EtherdreamSource source;
+    private final EtherdreamPlaybackState    playbackState;
+    private final EtherdreamSource           source;
     private final EtherdreamLightEngineFlags lightEngineFlags;
-    private final EtherdreamPlaybackFlags playbackFlags;
-    private final int sourceFlags;
-    private final int bufferFullness;
-    private final int pointRate;
-    private final int pointCount;
+    private final EtherdreamPlaybackFlags    playbackFlags;
+    private final int                        sourceFlags;
+    private final int                        bufferFullness;
+    private final int                        pointRate;
+    private final int                        pointCount;
 
 
     /*
@@ -100,4 +100,12 @@ public class EtherdreamStatus
     {
         return pointCount;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Status [pointCount: " + pointCount + " | bufferFullness: " + bufferFullness + " | pointRate: " +
+            pointRate + " | state: " + playbackState + "]";
+    }
+
 }

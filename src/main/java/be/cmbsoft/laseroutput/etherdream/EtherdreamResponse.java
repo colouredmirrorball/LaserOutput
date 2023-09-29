@@ -33,4 +33,12 @@ public class EtherdreamResponse
     {
         return status;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Response from Etherdream: Previous command: " + command + ", Response type: " + response + ", status:" +
+            " " + status;
+    }
+
 }

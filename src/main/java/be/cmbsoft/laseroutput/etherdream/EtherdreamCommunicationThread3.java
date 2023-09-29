@@ -41,6 +41,7 @@ public class EtherdreamCommunicationThread3 extends Thread
     @Override
     public void run()
     {
+        System.out.println("starting etherdream communicaiton thread");
         while (!halted)
         {
             try
@@ -49,14 +50,18 @@ public class EtherdreamCommunicationThread3 extends Thread
                 {
                     connect();
                 }
+                socket.setSoTimeout(100);
                 boolean    endOfStream = false;
                 ByteBuffer buffer      = ByteBuffer.allocate(22);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                int receivedChars = 0;
+                int     receivedChars = 0;
+                boolean first         = true;
                 while (!endOfStream)
                 {
                     // Blocks until we received an input from the Etherdream
                     int b = input.read();
+                    if (first) System.out.println("received a signal");
+                    first = false;
                     if (b < 0 || ++receivedChars >= buffer.capacity())
                     {
                         endOfStream = true;
@@ -67,7 +72,7 @@ public class EtherdreamCommunicationThread3 extends Thread
 //                        System.out.println((byte) (b & 0xff) + " | " + (char) b);
                     }
                 }
-
+                System.out.println("message received from etherdream");
 
                 EtherdreamResponse       response = processResponse(buffer.array());
                 EtherdreamResponseStatus status   = EtherdreamResponseStatus.get(response.getResponse().state);
@@ -79,6 +84,7 @@ public class EtherdreamCommunicationThread3 extends Thread
                 {
                     state = state.stateWhenNak(this);
                 }
+                System.out.println(response);
 
 
                 EtherdreamCommand messageToSend = state.generateMessage(this);
@@ -91,9 +97,7 @@ public class EtherdreamCommunicationThread3 extends Thread
             }
             catch (IOException e)
             {
-                e.printStackTrace();
-                halted = true;
-                Thread.currentThread().interrupt();
+                state = state.stateWhenNak(this);
             }
         }
         if (socket != null)
@@ -159,7 +163,7 @@ public class EtherdreamCommunicationThread3 extends Thread
                 @Override
                 State stateWhenNak(EtherdreamCommunicationThread3 thread)
                 {
-                    return INIT;
+                    return thread.hasFrame() ? CHECK_STATUS : INIT;
                 }
 
                 @Override
@@ -185,7 +189,7 @@ public class EtherdreamCommunicationThread3 extends Thread
                 @Override
                 EtherdreamCommand generateMessage(EtherdreamCommunicationThread3 thread)
                 {
-                    return null;
+                    return new EtherdreamPingCommand();
                 }
             }, PREPARE_STREAM
         {
