@@ -7,15 +7,15 @@ import be.cmbsoft.ilda.IldaPoint;
 
 public class Etherdream
 {
-    private final EtherdreamCommunicationThread thread;
-    private       EtherdreamBroadcast           broadcast;
-    private       boolean                       connectionFailed = false;
+    private final EtherdreamCommunicationThread3 thread;
+    private       EtherdreamBroadcast            broadcast;
+    private       boolean                        connectionFailed = false;
 
 
     public Etherdream(InetAddress address, EtherdreamBroadcast broadcast)
     {
         this.broadcast = broadcast;
-        thread = new EtherdreamCommunicationThread(address, this);
+        thread = new EtherdreamCommunicationThread3(address, this);
         thread.start();
     }
 
@@ -31,6 +31,10 @@ public class Etherdream
 
     public void project(List<IldaPoint> points, int pps)
     {
+        if (thread.isHalted())
+        {
+            thread.start();
+        }
         thread.project(points, pps);
     }
 

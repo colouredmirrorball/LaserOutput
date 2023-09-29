@@ -1,7 +1,8 @@
 package be.cmbsoft.laseroutput;
 
-import be.cmbsoft.ilda.IldaFrame;
 import org.junit.jupiter.api.Test;
+
+import be.cmbsoft.ilda.IldaFrame;
 
 class EtherdreamOutputTest extends AbstractOutputTest
 {
@@ -23,6 +24,14 @@ class EtherdreamOutputTest extends AbstractOutputTest
         output.project(ildaFrame.getCopyOnWritePoints());
         Thread.sleep(500);
         output.halt();
+    }
+
+    @Test
+    void listenForDevices() throws InterruptedException
+    {
+        EtherdreamOutput output = new EtherdreamOutput();
+        Thread.sleep(5000);
+        System.out.println(output.getDetectedDevices());
     }
 
 }

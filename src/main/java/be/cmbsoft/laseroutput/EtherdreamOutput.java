@@ -12,7 +12,8 @@ public class EtherdreamOutput extends LaserOutput
 {
 
     private final HashMap<String, Etherdream> devices = new HashMap<>();
-    private final EtherdreamDiscoverer discoverer;
+    private final EtherdreamDiscoverer        discoverer;
+    private       String                      alias;
 
     public EtherdreamOutput()
     {
@@ -29,10 +30,11 @@ public class EtherdreamOutput extends LaserOutput
         {
             Collection<Etherdream> etherdreams = devices.values();
 
-            // TODO support output to multiple (discoverer should already support this)
-            etherdreams.stream().findFirst().ifPresent(etherdream -> etherdream.project(points, getPps()));
+            etherdreams.stream()
+                       .filter(dream -> alias == null || dream.getBroadcast().getMac().endsWith(alias))
+                       .findFirst()
+                       .ifPresent(etherdream -> etherdream.project(points, getPps()));
             devices.entrySet().removeIf(entry -> entry.getValue().connectionFailed());
-
         }
 
     }
@@ -48,6 +50,16 @@ public class EtherdreamOutput extends LaserOutput
     public int getDetectedDevices()
     {
         return devices.size();
+    }
+
+    public String getAlias()
+    {
+        return alias;
+    }
+
+    public void setAlias(String alias)
+    {
+        this.alias = alias;
     }
 
 }
