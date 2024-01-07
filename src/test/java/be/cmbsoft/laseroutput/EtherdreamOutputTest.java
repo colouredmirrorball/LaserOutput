@@ -1,10 +1,10 @@
 package be.cmbsoft.laseroutput;
 
-import org.junit.jupiter.api.Test;
 
 import be.cmbsoft.ilda.IldaFrame;
+import org.junit.jupiter.api.Test;
 
-class EtherdreamOutputTest extends AbstractOutputTest
+public class EtherdreamOutputTest extends AbstractOutputTest
 {
     @Test
     void sendCircle() throws InterruptedException
@@ -14,7 +14,7 @@ class EtherdreamOutputTest extends AbstractOutputTest
         long             now       = System.currentTimeMillis();
         while (output.getDetectedDevices() == 0)
         {
-            Thread.sleep(2000);
+            Thread.sleep(6000);
             if (System.currentTimeMillis() - now > 5000)
             {
                 System.out.println("No devices found :(");
@@ -22,7 +22,7 @@ class EtherdreamOutputTest extends AbstractOutputTest
             }
         }
         output.project(ildaFrame.getCopyOnWritePoints());
-        Thread.sleep(5000);
+        Thread.sleep(50000);
         output.halt();
     }
 
@@ -30,8 +30,9 @@ class EtherdreamOutputTest extends AbstractOutputTest
     void listenForDevices() throws InterruptedException
     {
         EtherdreamOutput output = new EtherdreamOutput();
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         System.out.println(output.getDetectedDevices());
+        output.halt();
     }
 
 }
