@@ -1,5 +1,7 @@
 package be.cmbsoft.laseroutput.etherdream;
 
+import static processing.core.PApplet.hex;
+
 public enum EtherdreamResponseStatus
 {
     ACK('a'), NAK_FULL('F'), NAK_INVALID('I'), NAK_STOP_CONDITION('!');
@@ -14,12 +16,13 @@ public enum EtherdreamResponseStatus
     public static EtherdreamResponseStatus get(char state)
     {
         return switch (state)
-                {
-                    case 'a' -> ACK;
-                    case 'F' -> NAK_FULL;
-                    case 'I' -> NAK_INVALID;
-                    case '!' -> NAK_STOP_CONDITION;
-                    default -> throw new IllegalStateException("Unexpected response status value value: " + state);
-                };
+            {
+                case 'a' -> ACK;
+                case 'F' -> NAK_FULL;
+                case 'I' -> NAK_INVALID;
+                case '!' -> NAK_STOP_CONDITION;
+                default -> throw new IllegalStateException("Unexpected response status value value: " + state +
+                    " (" + hex(state) + ")");
+            };
     }
 }

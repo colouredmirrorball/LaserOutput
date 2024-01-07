@@ -28,12 +28,12 @@ public class EtherdreamOutput extends LaserOutput
     {
         synchronized (devices)
         {
-            Collection<Etherdream> etherdreams = devices.values();
+            Collection<Etherdream> dreams = devices.values();
 
-            etherdreams.stream()
-                       .filter(dream -> alias == null || dream.getBroadcast().getMac().endsWith(alias))
-                       .findFirst()
-                       .ifPresent(etherdream -> etherdream.project(points, getPps()));
+            dreams.stream()
+                  .filter(dream -> alias == null || dream.getBroadcast().getMac().endsWith(alias))
+                  .findFirst()
+                  .ifPresent(etherdream -> etherdream.project(points, getPps()));
             devices.entrySet().removeIf(entry -> entry.getValue().connectionFailed());
         }
 
@@ -47,7 +47,7 @@ public class EtherdreamOutput extends LaserOutput
         super.halt();
     }
 
-    public int getDetectedDevices()
+    public int getDetectedDevicesAmount()
     {
         return devices.size();
     }

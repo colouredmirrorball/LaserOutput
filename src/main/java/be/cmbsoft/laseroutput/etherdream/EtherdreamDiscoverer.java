@@ -42,7 +42,7 @@ public class EtherdreamDiscoverer implements Runnable
                 EtherdreamBroadcast broadcast = new EtherdreamBroadcast(buffer);
                 String mac = broadcast.getMac();
                 synchronized (devices) {
-                    log("found device in discoverer");
+                    log("found device in discoverer: " + mac);
                     Etherdream etherdream = devices.get(mac);
                     if (etherdream == null) {
                         log("Found an Etherdream: " + mac);

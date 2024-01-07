@@ -1,20 +1,21 @@
 package be.cmbsoft.laseroutput;
 
-
-import be.cmbsoft.ilda.IldaFrame;
 import org.junit.jupiter.api.Test;
 
-public class EtherdreamOutputTest extends AbstractOutputTest
+import be.cmbsoft.ilda.IldaFrame;
+
+class EtherdreamOutputTest extends AbstractOutputTest
 {
     @Test
     void sendCircle() throws InterruptedException
     {
-        IldaFrame        ildaFrame = generateCircle();
-        EtherdreamOutput output    = new EtherdreamOutput();
-        long             now       = System.currentTimeMillis();
-        while (output.getDetectedDevices() == 0)
+        IldaFrame ildaFrame = generateCircle();
+        System.out.println("There be a frame with " + ildaFrame.getPointCount() + " points.");
+        EtherdreamOutput output = new EtherdreamOutput();
+        long             now    = System.currentTimeMillis();
+        while (output.getDetectedDevicesAmount() == 0)
         {
-            Thread.sleep(6000);
+            Thread.sleep(2000);
             if (System.currentTimeMillis() - now > 5000)
             {
                 System.out.println("No devices found :(");
@@ -22,7 +23,7 @@ public class EtherdreamOutputTest extends AbstractOutputTest
             }
         }
         output.project(ildaFrame.getCopyOnWritePoints());
-        Thread.sleep(50000);
+        Thread.sleep(5000);
         output.halt();
     }
 
@@ -31,7 +32,8 @@ public class EtherdreamOutputTest extends AbstractOutputTest
     {
         EtherdreamOutput output = new EtherdreamOutput();
         Thread.sleep(10000);
-        System.out.println(output.getDetectedDevices());
+        System.out.println(output.getDetectedDevicesAmount());
+        System.out.println(output.getAlias());
         output.halt();
     }
 
