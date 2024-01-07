@@ -63,8 +63,58 @@ public class EtherdreamCommunicationThread3 extends Thread
                 ByteBuffer buffer = ByteBuffer.allocate(22);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-                writeResponseToBuffer(buffer);
-                processResponse(buffer);
+                boolean endOfStream   = false;
+                int     receivedChars = 0;
+                try
+                {
+                    while (!endOfStream)
+                    {
+                        // Blocks until we received an input from the Etherdream
+                        int b = input.read();
+                        if (b < 0 || ++receivedChars >= buffer.capacity())
+                        {
+                            endOfStream = true;
+                        }
+                        else
+                        {
+                            buffer.put((byte) (b & 0xff));
+                        }
+                    }
+                    System.out.println("message received from etherdream");
+                }
+                catch (SocketTimeoutException e)
+                {
+                    State oldState = state;
+                    state = state.stateWhenTimeout(this);
+                    log("Etherdream wasn't fast enough, we're now in state " + state);
+                    log("Do we have a frame? " + (hasFrame() ? "yes" : "no"));
+                    if (oldState != state)
+                    {
+                        log("State updated from " + oldState + " to " + state);
+                        sendCommand();
+                    }
+                }
+                if (endOfStream)
+                {
+                    try
+                    {
+                        EtherdreamResponse response = processResponse(buffer.array());
+                        System.out.println(response);
+                        EtherdreamResponseStatus status   = EtherdreamResponseStatus.get(response.getResponse().state);
+                        State                    oldState = state;
+                        state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this) : state.stateWhenNak(
+                            this);
+                        if (oldState != state)
+                        {
+                            log("State updated from " + oldState + " to " + state);
+                        }
+                        sendCommand();
+                    }
+                    catch (IllegalStateException e)
+                    {
+                        logException(e);
+                    }
+                }
 
             }
 
@@ -121,62 +171,6 @@ public class EtherdreamCommunicationThread3 extends Thread
     {
         currentFrame = nextFrame;
         return currentFrame;
-    }
-
-    private void processResponse(ByteBuffer buffer) throws IOException
-    {
-        try
-        {
-            EtherdreamResponse response = processResponse(buffer.array());
-            System.out.println(response);
-            EtherdreamResponseStatus status   = EtherdreamResponseStatus.get(response.getResponse().state);
-            State                    oldState = state;
-            state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this) : state.stateWhenNak(this);
-            if (oldState != state)
-            {
-                log("State updated from " + oldState + " to " + state);
-            }
-            sendCommand();
-        }
-        catch (IllegalStateException e)
-        {
-            logException(e);
-        }
-    }
-
-    private void writeResponseToBuffer(ByteBuffer buffer) throws IOException
-    {
-        boolean endOfStream   = false;
-        int     receivedChars = 0;
-        try
-        {
-            while (!endOfStream)
-            {
-                // Blocks until we received an input from the Etherdream
-                int b = input.read();
-                if (b < 0 || ++receivedChars >= buffer.capacity())
-                {
-                    endOfStream = true;
-                }
-                else
-                {
-                    buffer.put((byte) (b & 0xff));
-                }
-            }
-            System.out.println("message received from etherdream");
-        }
-        catch (SocketTimeoutException e)
-        {
-            State oldState = state;
-            state = state.stateWhenTimeout(this);
-            log("Etherdream wasn't fast enough, we're now in state " + state);
-            log("Do we have a frame? " + (hasFrame() ? "yes" : "no"));
-            if (oldState != state)
-            {
-                log("State updated from " + oldState + " to " + state);
-                sendCommand();
-            }
-        }
     }
 
     private void sendCommand() throws IOException
