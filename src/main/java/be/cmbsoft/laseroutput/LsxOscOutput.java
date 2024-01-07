@@ -23,7 +23,7 @@ public class LsxOscOutput extends LaserOutput {
     private final       int             port;
     private             int             timeline;
     private             int             destinationFrame;
-    private             OSCPortOut      outputPort;
+    private OSCPortOut outputPort;
     private             String          rootName          = DEFAULT_ROOT_NAME;
 
     public LsxOscOutput(int timeline, int destinationFrame, String ip, int port) {

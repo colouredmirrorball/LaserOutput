@@ -1,6 +1,7 @@
 package be.cmbsoft.laseroutput.etherdream;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -20,6 +21,7 @@ public class EtherdreamDiscoverer implements Runnable
     private final Map<String, Etherdream> devices;
 
     private boolean interrupted = false;
+    private int attemptIntervalTime = 1;
 
     public EtherdreamDiscoverer(Map<String, Etherdream> devices)
     {
@@ -34,27 +36,31 @@ public class EtherdreamDiscoverer implements Runnable
             try (DatagramSocket socket = new DatagramSocket(7654))
             {
                 byte[] buffer = new byte[512];
-                DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+                DatagramPacket response = new DatagramPacket(buffer, 36);
                 socket.receive(response);
                 InetAddress address = response.getAddress();
                 EtherdreamBroadcast broadcast = new EtherdreamBroadcast(buffer);
                 String mac = broadcast.getMac();
-                synchronized (devices)
-                {
+                synchronized (devices) {
                     log("found device in discoverer");
                     Etherdream etherdream = devices.get(mac);
-                    if (etherdream == null)
-                    {
+                    if (etherdream == null) {
                         log("Found an Etherdream: " + mac);
                         devices.put(mac, new Etherdream(address, broadcast));
-                    } else
-                    {
+                    } else {
                         etherdream.update(broadcast);
                     }
                 }
-            } catch (IOException exception)
-            {
+                attemptIntervalTime = 1;
+            } catch (BindException exception) {
+                attemptIntervalTime *= 2;
+            } catch (IOException exception) {
                 logException(exception);
+            }
+            try {
+                Thread.sleep(attemptIntervalTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }
