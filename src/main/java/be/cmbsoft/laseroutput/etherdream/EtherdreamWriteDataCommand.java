@@ -144,7 +144,7 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
             IldaPoint receivedPoint = receivedPoints.get(i);
             IldaPoint originalPoint = points.get(i);
             if (!receivedPoint.equals(originalPoint)) {
-//                 log("Point mismatch");
+                log("Point mismatch");
                 verified = false;
                 break;
             }

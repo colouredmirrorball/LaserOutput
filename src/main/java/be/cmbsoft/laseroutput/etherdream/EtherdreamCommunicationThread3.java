@@ -8,13 +8,17 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import be.cmbsoft.ilda.IldaPoint;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
 import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PLAYING;
 import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PREPARED;
+import static processing.core.PApplet.hex;
+import static processing.core.PApplet.parseChar;
 
 public class EtherdreamCommunicationThread3 extends Thread
 {
@@ -168,10 +172,20 @@ public class EtherdreamCommunicationThread3 extends Thread
             EtherdreamCommand generateMessage(EtherdreamCommunicationThread3 thread)
             {
                 List<IldaPoint> frame     = thread.getCurrentFrameAndClear();
+                int             frameSize = frame.size();
                 float           pointRate = thread.lastResponse.getStatus().getPointRate();
+
+                int fullness = thread.lastResponse.getStatus().getBufferFullness();
+                if (fullness + frameSize < 500) {
+                    // Arbitrary check to try to keep the buffer from running out
+                    List<IldaPoint> duplicate = new ArrayList<>(frame);
+//                    duplicate.addAll(frame);
+                    log("Sending the frame twice to avoid underflow, sending " + duplicate.size() + " points.");
+                    return new EtherdreamWriteDataCommand(duplicate);
+                }
                 if (pointRate != 0) {
-                    log("Sending a frame consisting of " + frame.size() + " points. At " + pointRate
-                        + " pps, it should " + "take " + 1000 * (frame.size() / pointRate) + " ms.");
+                    log("Sending a frame consisting of " + frameSize + " points. At " + pointRate + " pps, it should "
+                        + "take " + 1000 * (frameSize / pointRate) + " ms.");
                 }
                 return new EtherdreamWriteDataCommand(frame);
             }
@@ -219,6 +233,7 @@ public class EtherdreamCommunicationThread3 extends Thread
     private       State              state           = State.INIT;
     private       EtherdreamResponse lastResponse;
     private       long               lastCommandTime = System.currentTimeMillis();
+    private       EtherdreamCommand  previousMessage = null;
 
     EtherdreamCommunicationThread3(InetAddress address, Etherdream etherdream)
     {
@@ -236,7 +251,7 @@ public class EtherdreamCommunicationThread3 extends Thread
     @Override
     public void run()
     {
-        System.out.println("starting etherdream communicaiton thread");
+        log("starting etherdream communicaiton thread");
 
         while (!halted) {
             try {
@@ -260,11 +275,9 @@ public class EtherdreamCommunicationThread3 extends Thread
                             buffer.put((byte) (b & 0xff));
                         }
                     }
-                    System.out.println("message received from etherdream");
                 } catch (SocketTimeoutException e) {
                     State oldState = state;
                     state = state.stateWhenTimeout(this);
-                    log("Etherdream wasn't fast enough, we're now in state " + state);
                     log("Do we have a frame? " + (hasFrame() ? "yes" : "no"));
                     if (oldState != state) {
                         log("State updated from " + oldState + " to " + state);
@@ -280,8 +293,24 @@ public class EtherdreamCommunicationThread3 extends Thread
                         State                    oldState = state;
                         state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this)
                             : state.stateWhenNak(this);
+                        if (status != EtherdreamResponseStatus.ACK) {
+                            StringJoiner joiner = new StringJoiner(" - ");
+                            for (byte b: previousMessage.getBytes()) {
+
+                                joiner.add("0x" + hex(b) + "|" + parseChar(b));
+                            }
+                            log("Underflow? " + response.getStatus().getPlaybackFlags().isUnderFlow());
+                            if (previousMessage instanceof EtherdreamWriteDataCommand writeDataCommand) {
+                                log("Verified? " + writeDataCommand.verify(previousMessage.getBytes()));
+                            }
+                            System.out.println(joiner);
+                        }
                         if (oldState != state) {
                             log("State updated from " + oldState + " to " + state);
+                        }
+                        if (halted) {
+                            //Somebody could have requested a stop during previous steps
+                            state = State.STOP;
                         }
                         sendCommand();
                     } catch (IllegalStateException e) {
@@ -291,11 +320,11 @@ public class EtherdreamCommunicationThread3 extends Thread
 
             } catch (Exception exception) {
                 logException(exception);
-//                state = state.stateWhenNak(this);
             }
         }
         if (socket != null) {
             try {
+                log("Sending stop command...");
                 state = State.STOP;
                 sendCommand();
                 socket.close();
@@ -314,6 +343,7 @@ public class EtherdreamCommunicationThread3 extends Thread
 
     public void halt() throws IOException
     {
+        log("Requested to halt");
         halted = true;
     }
 
@@ -353,6 +383,7 @@ public class EtherdreamCommunicationThread3 extends Thread
             long now = System.nanoTime();
             log("Sending command " + messageToSend.getCommandChar() + ", we waited "
                 + (now - lastCommandTime) / 1000000f + " ms for this.");
+            previousMessage = messageToSend;
             output.write(messageToSend.getBytes());
             output.flush();
             lastCommandTime = now;
