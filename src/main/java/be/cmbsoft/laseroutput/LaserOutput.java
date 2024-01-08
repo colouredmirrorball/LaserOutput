@@ -149,4 +149,6 @@ public abstract class LaserOutput extends Thread
         project(Collections.emptyList());
     }
 
+    public abstract boolean isConnected();
+
 }

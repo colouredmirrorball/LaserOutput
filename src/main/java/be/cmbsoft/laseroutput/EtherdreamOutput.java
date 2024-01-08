@@ -47,6 +47,12 @@ public class EtherdreamOutput extends LaserOutput
         super.halt();
     }
 
+    @Override
+    public boolean isConnected()
+    {
+        return alias == null ? !devices.isEmpty() : devices.containsKey(alias);
+    }
+
     public int getDetectedDevicesAmount()
     {
         return devices.size();
@@ -57,9 +63,10 @@ public class EtherdreamOutput extends LaserOutput
         return alias;
     }
 
-    public void setAlias(String alias)
+    public EtherdreamOutput setAlias(String alias)
     {
         this.alias = alias;
+        return this;
     }
 
 }

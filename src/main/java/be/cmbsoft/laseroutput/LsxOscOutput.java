@@ -25,6 +25,7 @@ public class LsxOscOutput extends LaserOutput {
     private             int             destinationFrame;
     private OSCPortOut outputPort;
     private             String          rootName          = DEFAULT_ROOT_NAME;
+    boolean connected = false;
 
     public LsxOscOutput(int timeline, int destinationFrame, String ip, int port) {
         this.timeline = timeline;
@@ -109,10 +110,18 @@ public class LsxOscOutput extends LaserOutput {
         OSCPortOut oscPort = getOscPort();
         try {
             oscPort.send(message);
+            connected = true;
         } catch (IOException | OSCSerializeException exception) {
+            connected = false;
             throw new RuntimeException(exception);
         }
         b.clear();
+    }
+
+    @Override
+    public boolean isConnected()
+    {
+        return connected;
     }
 
     private OSCPortOut getOscPort() {

@@ -47,6 +47,11 @@ public class EtherdreamDiscoverer implements Runnable
                     if (etherdream == null) {
                         log("Found an Etherdream: " + mac);
                         devices.put(mac, new Etherdream(address, broadcast));
+                        log("Etherdream details:\n Buffer capacity: " + broadcast.getBufferCapacity() + "\n Max point "
+                            + "rate: " + broadcast.getMaxPointRate() + "\n Hardware revision number: "
+                            + broadcast.getHardwareRevision() + "\n Software revision number: "
+                            + broadcast.getSoftwareRevision());
+
                     } else {
                         etherdream.update(broadcast);
                     }
