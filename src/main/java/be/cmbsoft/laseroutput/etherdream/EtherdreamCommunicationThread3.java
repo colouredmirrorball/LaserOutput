@@ -159,14 +159,20 @@ public class EtherdreamCommunicationThread3 extends Thread
             State stateWhenNak(EtherdreamCommunicationThread3 thread)
             {
                 EtherdreamResponse response = thread.lastResponse;
-                if (response != null) {
-                    if (PLAYING == response.getStatus().getPlaybackState()) {
+                if (response != null)
+                {
+                    if (PLAYING == response.getStatus().getPlaybackState())
+                    {
                         return SEND_DATA;
-                    } else {
-                        return thread.hasFrame() ? CHECK_STATUS : STOP;
+                    }
+                    else
+                    {
+                        return thread.hasFrame() ? CHECK_STATUS
+                            : STOP;
                     }
                 }
-                return thread.hasFrame() ? CHECK_STATUS : STOP;
+                return thread.hasFrame() ? CHECK_STATUS
+                    : STOP;
             }
 
             @Override
@@ -177,9 +183,8 @@ public class EtherdreamCommunicationThread3 extends Thread
                 int             frameSize = frame.size();
                 float           pointRate = thread.lastResponse.getStatus().getPointRate();
 
-
                 int fullness = thread.lastResponse.getStatus().getBufferFullness();
-                while (fullness + frameSize < 500)
+                while (frameSize != 0 && fullness + frameSize < 500)
                 {
                     // Arbitrary check to try to keep the buffer from running out
                     copy.addAll(frame);
@@ -197,7 +202,8 @@ public class EtherdreamCommunicationThread3 extends Thread
             @Override
             State stateWhenAck(EtherdreamCommunicationThread3 thread)
             {
-                return thread.hasFrame() ? SEND_DATA : STOP;
+                return thread.hasFrame() ? SEND_DATA
+                    : STOP;
             }
 
             @Override

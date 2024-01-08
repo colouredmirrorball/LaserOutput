@@ -116,7 +116,8 @@ public abstract class LaserOutput extends Thread
     public void project(IldaRenderer renderer) {
         Optional.ofNullable(renderer)
                 .map(IldaRenderer::getCurrentFrame)
-                .ifPresent(this::project);
+                .ifPresent(frame -> this.points = frame.getPoints());
+        project(points);
     }
 
     public Mode getMode()
