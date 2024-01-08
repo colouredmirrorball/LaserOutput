@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import be.cmbsoft.ilda.IldaPoint;
+
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
 import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PLAYING;
@@ -172,22 +173,24 @@ public class EtherdreamCommunicationThread3 extends Thread
             EtherdreamCommand generateMessage(EtherdreamCommunicationThread3 thread)
             {
                 List<IldaPoint> frame     = thread.getCurrentFrameAndClear();
+                List<IldaPoint> copy      = new ArrayList<>(frame);
                 int             frameSize = frame.size();
                 float           pointRate = thread.lastResponse.getStatus().getPointRate();
 
+
                 int fullness = thread.lastResponse.getStatus().getBufferFullness();
-                if (fullness + frameSize < 500) {
+                while (fullness + frameSize < 500)
+                {
                     // Arbitrary check to try to keep the buffer from running out
-                    List<IldaPoint> duplicate = new ArrayList<>(frame);
-//                    duplicate.addAll(frame);
-                    log("Sending the frame twice to avoid underflow, sending " + duplicate.size() + " points.");
-                    return new EtherdreamWriteDataCommand(duplicate);
+                    copy.addAll(frame);
+                    log("Sending the frame twice to avoid underflow, sending " + copy.size() + " points.");
+                    frameSize = copy.size();
                 }
                 if (pointRate != 0) {
                     log("Sending a frame consisting of " + frameSize + " points. At " + pointRate + " pps, it should "
                         + "take " + 1000 * (frameSize / pointRate) + " ms.");
                 }
-                return new EtherdreamWriteDataCommand(frame);
+                return new EtherdreamWriteDataCommand(copy);
             }
         }, PROJECT
         {
@@ -300,9 +303,6 @@ public class EtherdreamCommunicationThread3 extends Thread
                                 joiner.add("0x" + hex(b) + "|" + parseChar(b));
                             }
                             log("Underflow? " + response.getStatus().getPlaybackFlags().isUnderFlow());
-                            if (previousMessage instanceof EtherdreamWriteDataCommand writeDataCommand) {
-                                log("Verified? " + writeDataCommand.verify(previousMessage.getBytes()));
-                            }
                             System.out.println(joiner);
                         }
                         if (oldState != state) {

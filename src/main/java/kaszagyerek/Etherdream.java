@@ -462,7 +462,7 @@ public class Etherdream implements Runnable
     DACResponse write(Command cmd, DACPoint... data) throws IOException
     {
         System.out.print("cmd: " + ((char) cmd.command) + " ");
-        DACResponse response = null;
+        DACResponse response;
 
         byte[] bytes = cmd.bytes(data);
         output.write(bytes);

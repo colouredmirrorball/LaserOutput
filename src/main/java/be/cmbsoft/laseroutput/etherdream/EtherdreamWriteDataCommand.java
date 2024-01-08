@@ -6,9 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import be.cmbsoft.ilda.IldaPoint;
+import processing.core.PVector;
+
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static java.lang.Math.max;
-import processing.core.PVector;
 
 public class EtherdreamWriteDataCommand implements EtherdreamCommand
 {
@@ -65,9 +66,9 @@ public class EtherdreamWriteDataCommand implements EtherdreamCommand
             buffer.putShort(rescale(position.x));
             buffer.putShort(rescale(position.y));
 
-            int red = rescaleColour(point.getRed());
-            int green = rescaleColour(point.getGreen());
-            int blue = rescaleColour(point.getBlue());
+            int red   = point.isBlanked() ? 0 : rescaleColour(point.getRed());
+            int green = point.isBlanked() ? 0 : rescaleColour(point.getGreen());
+            int blue  = point.isBlanked() ? 0 : rescaleColour(point.getBlue());
             buffer.putShort((short) red);
             buffer.putShort((short) green);
             buffer.putShort((short) blue);

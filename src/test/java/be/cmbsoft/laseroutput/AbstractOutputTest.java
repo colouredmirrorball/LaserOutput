@@ -12,6 +12,12 @@ public abstract class AbstractOutputTest
         renderer.beginDraw();
         renderer.stroke(renderer.color(255, 0, 0));
         renderer.ellipse(100, 100, 50, 50);
+        renderer.stroke(renderer.color(0, 255, 0));
+        renderer.ellipse(120, 80, 30, 30);
+        renderer.stroke(renderer.color(0, 0, 255));
+        renderer.ellipse(70, 130, 25, 25);
+        renderer.stroke(renderer.color(255, 0, 255));
+        renderer.ellipse(100, 130, 125, 25);
         renderer.endDraw();
         return renderer.getCurrentFrame();
     }
