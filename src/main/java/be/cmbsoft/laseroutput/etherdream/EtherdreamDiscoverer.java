@@ -5,6 +5,7 @@ import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.Map;
 
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
@@ -15,32 +16,48 @@ import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
  * update the status of existing devices.
  */
 
-public class EtherdreamDiscoverer implements Runnable
+public enum EtherdreamDiscoverer implements Runnable
 {
+    INSTANCE;
 
-    private final Map<String, Etherdream> devices;
+    private static final Map<String, Etherdream> devices = new HashMap<>();
 
-    private boolean interrupted = false;
-    private int attemptIntervalTime = 1;
+    private boolean interrupted         = true;
+    private int     attemptIntervalTime = 1;
 
-    public EtherdreamDiscoverer(Map<String, Etherdream> devices)
+    public static void startIfYouWerent()
     {
-        this.devices = devices;
+        if (INSTANCE.interrupted)
+        {
+            new Thread(INSTANCE).start();
+        }
+    }
+
+    public static Map<String, Etherdream> getDevices()
+    {
+        return devices;
+    }
+
+    public static void stop()
+    {
+        INSTANCE.interrupted = true;
     }
 
     @Override
     public void run()
     {
+        interrupted = false;
+        Thread.currentThread().setName("Etherdream discoverer");
         while (!interrupted)
         {
             try (DatagramSocket socket = new DatagramSocket(7654))
             {
-                byte[] buffer = new byte[512];
+                byte[]         buffer   = new byte[512];
                 DatagramPacket response = new DatagramPacket(buffer, 36);
                 socket.receive(response);
-                InetAddress address = response.getAddress();
+                InetAddress         address   = response.getAddress();
                 EtherdreamBroadcast broadcast = new EtherdreamBroadcast(buffer);
-                String mac = broadcast.getMac();
+                String              mac       = broadcast.getMac();
                 synchronized (devices) {
                     log("found device in discoverer: " + mac);
                     Etherdream etherdream = devices.get(mac);
@@ -68,10 +85,5 @@ public class EtherdreamDiscoverer implements Runnable
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    public void stop()
-    {
-        interrupted = true;
     }
 }

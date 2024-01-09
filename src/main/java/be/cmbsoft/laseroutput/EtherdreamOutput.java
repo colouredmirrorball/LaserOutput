@@ -1,8 +1,8 @@
 package be.cmbsoft.laseroutput;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.laseroutput.etherdream.Etherdream;
@@ -11,16 +11,13 @@ import be.cmbsoft.laseroutput.etherdream.EtherdreamDiscoverer;
 public class EtherdreamOutput extends LaserOutput
 {
 
-    private final HashMap<String, Etherdream> devices = new HashMap<>();
-    private final EtherdreamDiscoverer        discoverer;
-    private       String                      alias;
+    private final Map<String, Etherdream> devices;
+    private       String                  alias;
 
     public EtherdreamOutput()
     {
-        discoverer = new EtherdreamDiscoverer(devices);
-        Thread discovererThread = new Thread(discoverer);
-        discovererThread.setName("Etherdream discoverer");
-        discovererThread.start();
+        EtherdreamDiscoverer.startIfYouWerent();
+        devices = EtherdreamDiscoverer.getDevices();
     }
 
     @Override
@@ -43,7 +40,7 @@ public class EtherdreamOutput extends LaserOutput
     public void halt()
     {
         devices.values().forEach(Etherdream::stop);
-        discoverer.stop();
+        EtherdreamDiscoverer.stop();
         super.halt();
     }
 
