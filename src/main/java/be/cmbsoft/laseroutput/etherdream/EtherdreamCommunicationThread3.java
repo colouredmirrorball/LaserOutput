@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import be.cmbsoft.ilda.IldaPoint;
 
@@ -309,7 +310,7 @@ public class EtherdreamCommunicationThread3 extends Thread
                                 joiner.add("0x" + hex(b) + "|" + parseChar(b));
                             }
                             log("Underflow? " + response.getStatus().getPlaybackFlags().isUnderFlow());
-                            System.out.println(joiner);
+//                            System.out.println(joiner);
                         }
                         if (oldState != state) {
                             log("State updated from " + oldState + " to " + state);
@@ -344,7 +345,7 @@ public class EtherdreamCommunicationThread3 extends Thread
     public void project(List<IldaPoint> points, int pps)
     {
         this.targetPps = pps;
-        this.nextFrame = points == null || points.isEmpty() ? null : points;
+        this.nextFrame = points == null || points.isEmpty() ? null : new CopyOnWriteArrayList<>(points);
     }
 
     public void halt() throws IOException
@@ -399,7 +400,7 @@ public class EtherdreamCommunicationThread3 extends Thread
     private boolean willNextFrameOverflowBuffer()
     {
         int bufferFullness = lastResponse.getStatus().getBufferFullness();
-        return currentFrame.size() > maxBufferSize - bufferFullness;
+        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness;
     }
 
 }
