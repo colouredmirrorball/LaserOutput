@@ -5,42 +5,48 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import be.cmbsoft.ilda.IldaPoint;
+
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
+import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
+import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PLAYING;
+import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PREPARED;
 
 public class EtherdreamCommunicationThread extends Thread
 {
-    private static final EtherdreamPrepareStreamCommand prepareStreamCommand = new EtherdreamPrepareStreamCommand();
-    private static final EtherdreamStopCommand etherdreamStopCommand = new EtherdreamStopCommand();
-
-    private final InetAddress address;
-    private final ArrayBlockingQueue<EtherdreamCommand> messages = new ArrayBlockingQueue<>(20);
-    private final Etherdream etherdream;
-
-    private Socket socket;
-    private OutputStream output;
-    private InputStream input;
-    private boolean halted = false;
-    private EtherdreamCommand lastMessage;
-    private boolean sendStopCommand = false;
-    private boolean sendPrepareStreamCommand = false;
-    private EtherdreamStatus lastStatus;
+    private final InetAddress        address;
+    private final Etherdream         etherdream;
+    private final int                maxBufferSize;
+    private       boolean            halted;
+    private       Socket             socket;
+    private       OutputStream       output;
+    private       InputStream        input;
+    private       int                targetPps;
+    private       List<IldaPoint>    nextFrame;
+    private       List<IldaPoint>    currentFrame;
+    private       State              state = State.INIT;
+    private       EtherdreamResponse lastResponse;
 
     EtherdreamCommunicationThread(InetAddress address, Etherdream etherdream)
     {
         setName("EtherdreamCommunicationThread");
         this.address = address;
         this.etherdream = etherdream;
+        this.maxBufferSize = etherdream.getBroadcast().getBufferCapacity();
     }
 
     @Override
     public void run()
     {
+        log("starting etherdream communicaiton thread");
 
         while (!halted)
         {
@@ -50,126 +56,139 @@ public class EtherdreamCommunicationThread extends Thread
                 {
                     connect();
                 }
-                boolean endOfStream = false;
+                socket.setSoTimeout(500);
+
                 ByteBuffer buffer = ByteBuffer.allocate(22);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                int receivedChars = 0;
-                while (!endOfStream)
+
+                boolean endOfStream   = false;
+                int     receivedChars = 0;
+                try
                 {
-                    int b = input.read();
-                    if (b < 0 || ++receivedChars >= buffer.capacity())
+                    while (!endOfStream)
                     {
-                        endOfStream = true;
-                    } else
-                    {
-                        buffer.put((byte) (b & 0xff));
-//                        System.out.println((byte) (b & 0xff) + " | " + (char) b);
+                        // Blocks until we received an input from the Etherdream
+                        int b = input.read();
+                        if (b < 0 || ++receivedChars >= buffer.capacity())
+                        {
+                            endOfStream = true;
+                        }
+                        else
+                        {
+                            buffer.put((byte) (b & 0xff));
+                        }
                     }
                 }
-                processResponse(buffer.array());
-
-                EtherdreamCommand messageToSend;
-                if (sendStopCommand)
+                catch (SocketTimeoutException e)
                 {
-                    messageToSend = etherdreamStopCommand;
-                    sendStopCommand = false;
-                } else if (sendPrepareStreamCommand)
-                {
-                    messageToSend = prepareStreamCommand;
-                    sendPrepareStreamCommand = false;
-                } else messageToSend = messages.take();
-
-                log("Sending command " + messageToSend.getCommandChar());
-                output.write(messageToSend.getBytes());
-                output.flush();
-                lastMessage = messageToSend;
-                if (sendStopCommand)
-                {
-                    halted = true;
+                    State oldState = state;
+                    state = state.stateWhenTimeout(this);
+//                    log("Do we have a frame? " + (hasFrame() ? "yes" : "no"));
+                    if (oldState != state)
+                    {
+                        log("State updated from " + oldState + " to " + state);
+                        sendCommand();
+                    }
                 }
-            } catch (IOException | InterruptedException e)
+                catch (SocketException exception)
+                {
+                    logException(exception);
+                    etherdream.setConnectionFailed();
+                    return;
+                }
+                if (endOfStream)
+                {
+                    processReply(buffer);
+                }
+
+            }
+            catch (Exception exception)
             {
-                e.printStackTrace();
-                halted = true;
-                Thread.currentThread().interrupt();
+                logException(exception);
             }
         }
         if (socket != null)
         {
             try
             {
+                log("Sending stop command...");
+                state = State.STOP;
+                sendCommand();
                 socket.close();
-            } catch (IOException e)
+            }
+            catch (IOException e)
             {
-                e.printStackTrace();
+                logException(e);
             }
         }
         etherdream.setConnectionFailed();
-
     }
 
-
-    /**
-     * Add a command to the queue. This operation might block if the queue is full.
-     *
-     * @param message a message
-     */
-    void addMessage(EtherdreamCommand message)
+    public boolean isHalted()
     {
-        log("Adding message to queue: " + message.getCommandChar());
+        return halted;
+    }
+
+    private void processReply(ByteBuffer buffer) throws IOException
+    {
         try
         {
-            messages.put(message);
-        } catch (InterruptedException e)
+            EtherdreamResponse response = processResponse(buffer.array());
+            lastResponse = response;
+            EtherdreamResponseStatus status = EtherdreamResponseStatus.get(response.getResponse().state);
+            state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this) : state.stateWhenNak(this);
+            if (status != EtherdreamResponseStatus.ACK)
+            {
+                log("We got a NAK!");
+                log(response.toString());
+            }
+//                        if (oldState != state) {
+//                            log("State updated from " + oldState + " to " + state);
+//                        }
+            if (halted)
+            {
+                //Somebody could have requested a stop during previous steps
+                state = State.STOP;
+            }
+            sendCommand();
+        }
+        catch (IllegalStateException e)
         {
-            Thread.currentThread().interrupt();
+            logException(e);
         }
     }
 
-    private void processResponse(byte[] array)
+    public void project(List<IldaPoint> points, int pps)
     {
-        EtherdreamResponse response = new EtherdreamResponse(array);
+        this.targetPps = pps;
+        this.nextFrame = points == null || points.isEmpty() ? null : new CopyOnWriteArrayList<>(points);
+    }
 
-        if (!EtherdreamResponseStatus.ACK.equals(response.getResponse()))
-        {
-            // The thing went wrong!
-            switch (response.getResponse())
-            {
-                case NAK_FULL:
-                    // BUG: the Etherdream does not send a NAK_FULL but a NAK_INVALID when buffer is full!
-                    log("Buffer full, don't send so many points pl0x");
-                    break;
-                case NAK_INVALID:
-                    // Some ad hoc troubleshooting
-                    if (lastMessage.getCommandChar() == 'p' &&
-                            response.getStatus().getPlaybackState() == EtherdreamPlaybackState.PREPARED)
-                    {
-                        // The thing that went wrong is that the ED, for some reason, is confused - it should be IDLE
-                        sendPrepareStreamCommand = true;
-                        log("Etherdream wasn't prepared...");
-                    } else if (lastMessage.getCommandChar() == 'd')
-                    {
-                        log("Invalid data command: " + response.getCommand());
-                        boolean passedCheck = ((EtherdreamWriteDataCommand) lastMessage).verify(lastMessage.getBytes());
-                        if (!passedCheck)
-                        {
-                            log("Data was not properly formatted...");
-                        }
-                    } else
-                    {
-                        log("Invalid command: " + response.getCommand());
-                    }
-                    break;
-                case NAK_STOP_CONDITION:
-                    log("Etherdream is in a stop condition!");
-                    break;
-                default:
-            }
-        } else
-        {
-            log("ACK received for command " + response.getCommand());
-        }
-        lastStatus = response.getStatus();
+    public void halt() throws IOException
+    {
+        log("Requested to halt");
+        halted = true;
+    }
+
+    public EtherdreamResponse getLastResponse()
+    {
+        return lastResponse;
+    }
+
+    private boolean hasFrame()
+    {
+        return nextFrame != null && !nextFrame.isEmpty();
+    }
+
+    private EtherdreamResponse processResponse(byte[] array)
+    {
+        return new EtherdreamResponse(array);
+    }
+
+    private List<IldaPoint> getCurrentFrameAndClear()
+    {
+        currentFrame = nextFrame;
+        return currentFrame;
     }
 
     private void connect() throws IOException
@@ -180,49 +199,236 @@ public class EtherdreamCommunicationThread extends Thread
         input = socket.getInputStream();
     }
 
-    public void halt()
+    private void sendCommand() throws IOException
     {
-        sendStopCommand = true;
+        EtherdreamCommand messageToSend = state.generateMessage(this);
+        if (messageToSend != null)
+        {
+            //long now = System.nanoTime();
+//            log("Sending command " + messageToSend.getCommandChar() + ", we waited "
+//                + (now - lastCommandTime) / 1000000f + " ms for this.");
+            output.write(messageToSend.getBytes());
+            output.flush();
+        }
     }
 
-    public void project(List<IldaPoint> points, int pps)
+    private boolean willNextFrameOverflowBuffer()
     {
+        int bufferFullness = lastResponse.getStatus().getBufferFullness();
+        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness;
+    }
 
-        EtherdreamBroadcast broadcast = etherdream.getBroadcast();
+    enum State
+    {
+        INIT
+            {
+                @Override
+                State stateWhenAck(EtherdreamCommunicationThread thread)
+                {
+                    return thread.hasFrame() ? CHECK_STATUS : INIT;
+                }
 
-        int bufferCapacity = broadcast.getBufferCapacity();
-        if (points.size() > bufferCapacity)
+                @Override
+                State stateWhenNak(EtherdreamCommunicationThread thread)
+                {
+                    return thread.hasFrame() ? CHECK_STATUS : INIT;
+                }
+
+                @Override
+                EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+                {
+                    return null;
+                }
+
+                @Override
+                State stateWhenTimeout(EtherdreamCommunicationThread thread)
+                {
+                    return thread.hasFrame() ? CHECK_STATUS : INIT;
+                }
+            },
+        CHECK_STATUS
+            {
+                @Override
+                State stateWhenAck(EtherdreamCommunicationThread thread)
+                {
+                    if (!thread.hasFrame())
+                    {
+                        return STOP;
+                    }
+                    if (PLAYING == thread.lastResponse.getStatus().getPlaybackState())
+                    {
+                        if (thread.willNextFrameOverflowBuffer())
+                        {
+                            return CHECK_STATUS;
+                        }
+                        else
+                        {
+                            return SEND_DATA;
+                        }
+                    }
+                    return PREPARE_STREAM;
+                }
+
+                @Override
+                State stateWhenNak(EtherdreamCommunicationThread thread)
+                {
+                    return STOP;
+                }
+
+                @Override
+                EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+                {
+                    return new EtherdreamPingCommand();
+                }
+            }, PREPARE_STREAM
         {
-            points.subList(0, bufferCapacity);
+            @Override
+            State stateWhenAck(EtherdreamCommunicationThread thread)
+            {
+                return SET_POINT_RATE;
+            }
+
+            @Override
+            State stateWhenNak(EtherdreamCommunicationThread thread)
+            {
+                return STOP;
+            }
+
+            @Override
+            EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+            {
+                return new EtherdreamPrepareStreamCommand();
+            }
+        }, STOP
+        {
+            @Override
+            State stateWhenAck(EtherdreamCommunicationThread thread)
+            {
+                return INIT;
+            }
+
+            @Override
+            State stateWhenNak(EtherdreamCommunicationThread thread)
+            {
+                return INIT;
+            }
+
+            @Override
+            EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+            {
+                return new EtherdreamStopCommand();
+            }
+        }, SET_POINT_RATE
+        {
+            @Override
+            State stateWhenAck(EtherdreamCommunicationThread thread)
+            {
+                return SEND_DATA;
+            }
+
+            @Override
+            State stateWhenNak(EtherdreamCommunicationThread thread)
+            {
+                return STOP;
+            }
+
+            @Override
+            EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+            {
+                return new EtherdreamPointRateCommand(thread.targetPps);
+            }
+        }, SEND_DATA
+        {
+            @Override
+            State stateWhenAck(EtherdreamCommunicationThread thread)
+            {
+                if (PREPARED == thread.lastResponse.getStatus().getPlaybackState())
+                {
+                    return PROJECT;
+                }
+                if (thread.willNextFrameOverflowBuffer())
+                {
+//                    log("Overflow imminent");
+                    // Keep checking status until buffer no longer full
+                    return CHECK_STATUS;
+                }
+                return SEND_DATA;
+            }
+
+            @Override
+            State stateWhenNak(EtherdreamCommunicationThread thread)
+            {
+                EtherdreamResponse response = thread.lastResponse;
+                if (response != null)
+                {
+                    if (PLAYING == response.getStatus().getPlaybackState())
+                    {
+                        return SEND_DATA;
+                    }
+                    else
+                    {
+                        return thread.hasFrame() ? CHECK_STATUS
+                            : STOP;
+                    }
+                }
+                return thread.hasFrame() ? CHECK_STATUS
+                    : STOP;
+            }
+
+            @Override
+            EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+            {
+                List<IldaPoint> frame     = thread.getCurrentFrameAndClear();
+                List<IldaPoint> copy      = new ArrayList<>(frame);
+                int             frameSize = frame.size();
+                //float           pointRate = thread.lastResponse.getStatus().getPointRate();
+
+                int fullness = thread.lastResponse.getStatus().getBufferFullness();
+                while (frameSize != 0 && fullness + frameSize < 500)
+                {
+                    // Arbitrary check to try to keep the buffer from running out
+                    copy.addAll(frame);
+                    log("Sending the frame twice to avoid underflow, sending " + copy.size() + " points.");
+                    frameSize = copy.size();
+                }
+//                if (pointRate != 0) {
+//                    log("Sending a frame consisting of " + frameSize + " points. At " + pointRate + " pps, it should "
+//                        + "take " + 1000 * (frameSize / pointRate) + " ms.");
+//                }
+                return new EtherdreamWriteDataCommand(copy);
+            }
+        }, PROJECT
+        {
+            @Override
+            State stateWhenAck(EtherdreamCommunicationThread thread)
+            {
+                return thread.hasFrame() ? SEND_DATA
+                    : STOP;
+            }
+
+            @Override
+            State stateWhenNak(EtherdreamCommunicationThread thread)
+            {
+                return STOP;
+            }
+
+            @Override
+            EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
+            {
+                return new EtherdreamBeginPlaybackCommand(30000);
+            }
+        };
+
+        abstract State stateWhenAck(EtherdreamCommunicationThread thread);
+
+        abstract State stateWhenNak(EtherdreamCommunicationThread thread);
+
+        State stateWhenTimeout(EtherdreamCommunicationThread thread)
+        {
+            return this;
         }
 
-        int bufferFullness = 0;
-        if (lastStatus != null)
-        {
-            bufferFullness = lastStatus.getBufferFullness();
-        }
-        if (points.size() > bufferCapacity - bufferFullness)
-        {
-            // FIXME instead of skipping a frame we should be slightly more clever about it...
-            addMessage(new EtherdreamWriteDataCommand(points));
-        }
-
-
-        if (broadcast.getMaxPointRate() < pps)
-        {
-            throw new RuntimeException("Etherdream max point rate is " + broadcast.getMaxPointRate() +
-                    " but requested " + pps);
-        }
-        if (lastStatus == null || EtherdreamPlaybackState.IDLE == lastStatus.getPlaybackState())
-        {
-            sendPrepareStreamCommand = true;
-            log("Put Etherdream in prepared state");
-        }
-        if (lastStatus != null && EtherdreamPlaybackState.PREPARED == lastStatus.getPlaybackState())
-        {
-            addMessage(new EtherdreamBeginPlaybackCommand(pps));
-        }
-
+        abstract EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread);
     }
 
 }
