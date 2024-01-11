@@ -23,6 +23,7 @@ public class EtherdreamOutput extends LaserOutput
     @Override
     public void project(List<IldaPoint> points)
     {
+        List<IldaPoint> transformedPoints = transform(points);
         synchronized (devices)
         {
             Collection<Etherdream> dreams = devices.values();
@@ -30,7 +31,7 @@ public class EtherdreamOutput extends LaserOutput
             dreams.stream()
                   .filter(dream -> alias == null || dream.getBroadcast().getMac().endsWith(alias))
                   .findFirst()
-                  .ifPresent(etherdream -> etherdream.project(points, getPps()));
+                  .ifPresent(etherdream -> etherdream.project(transformedPoints, getPps()));
             devices.entrySet().removeIf(entry -> entry.getValue().connectionFailed());
         }
 

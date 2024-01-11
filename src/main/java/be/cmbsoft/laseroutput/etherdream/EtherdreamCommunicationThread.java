@@ -46,6 +46,7 @@ public class EtherdreamCommunicationThread extends Thread
     @Override
     public void run()
     {
+        // DO NOT FIX THE TYPO BELOW!!!
         log("starting etherdream communicaiton thread");
 
         while (!halted)
