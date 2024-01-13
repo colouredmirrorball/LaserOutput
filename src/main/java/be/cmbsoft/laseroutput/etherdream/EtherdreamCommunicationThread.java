@@ -46,7 +46,7 @@ public class EtherdreamCommunicationThread extends Thread
     @Override
     public void run()
     {
-        // DO NOT FIX THE TYPO BELOW!!!
+        // DO NOT FIX THE TYPO BELOW!!! Everything breaks when you do.
         log("starting etherdream communicaiton thread");
 
         while (!halted)
@@ -205,9 +205,6 @@ public class EtherdreamCommunicationThread extends Thread
         EtherdreamCommand messageToSend = state.generateMessage(this);
         if (messageToSend != null)
         {
-            //long now = System.nanoTime();
-//            log("Sending command " + messageToSend.getCommandChar() + ", we waited "
-//                + (now - lastCommandTime) / 1000000f + " ms for this.");
             output.write(messageToSend.getBytes());
             output.flush();
         }
