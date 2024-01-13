@@ -10,6 +10,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,6 +23,9 @@ import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PREPARED
 
 public class EtherdreamCommunicationThread extends Thread
 {
+    private static final EtherdreamWriteDataCommand EMPTY_FRAME = generateEmptyFrame();
+    private              long                       lastProjectionTime;
+
     private final InetAddress        address;
     private final Etherdream         etherdream;
     private final int                maxBufferSize;
@@ -34,6 +38,16 @@ public class EtherdreamCommunicationThread extends Thread
     private       List<IldaPoint>    currentFrame;
     private       State              state = State.INIT;
     private       EtherdreamResponse lastResponse;
+
+    private static EtherdreamWriteDataCommand generateEmptyFrame()
+    {
+        List<IldaPoint> blankedPoints = new ArrayList<>();
+        for (int i = 0; i < 500; i++)
+        {
+            blankedPoints.add(new IldaPoint(0, 0, 0, 0, 0, 0, true));
+        }
+        return new EtherdreamWriteDataCommand(blankedPoints);
+    }
 
     EtherdreamCommunicationThread(InetAddress address, Etherdream etherdream)
     {
@@ -163,6 +177,10 @@ public class EtherdreamCommunicationThread extends Thread
     {
         this.targetPps = pps;
         this.nextFrame = points == null || points.isEmpty() ? null : new CopyOnWriteArrayList<>(points);
+        if (nextFrame != null)
+        {
+            lastProjectionTime = System.nanoTime();
+        }
     }
 
     public void halt() throws IOException
@@ -365,20 +383,23 @@ public class EtherdreamCommunicationThread extends Thread
                     }
                     else
                     {
-                        return thread.hasFrame() ? CHECK_STATUS
-                            : STOP;
+                        return thread.hasFrame() ? CHECK_STATUS : STOP;
                     }
                 }
-                return thread.hasFrame() ? CHECK_STATUS
-                    : STOP;
+                return thread.hasFrame() ? CHECK_STATUS : STOP;
             }
 
             @Override
             EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
             {
-                List<IldaPoint> frame     = thread.getCurrentFrameAndClear();
-                List<IldaPoint> copy      = new ArrayList<>(frame);
-                int             frameSize = frame.size();
+                List<IldaPoint> frame = thread.getCurrentFrameAndClear();
+                if (frame == null && thread.lastProjectionTime < System.nanoTime() + 1000000000)
+                {
+                    return EMPTY_FRAME;
+                }
+
+                List<IldaPoint> copy      = frame == null ? Collections.emptyList() : new ArrayList<>(frame);
+                int             frameSize = frame == null ? 0 : frame.size();
                 //float           pointRate = thread.lastResponse.getStatus().getPointRate();
 
                 int fullness = thread.lastResponse.getStatus().getBufferFullness();
@@ -389,6 +410,8 @@ public class EtherdreamCommunicationThread extends Thread
                     log("Sending the frame twice to avoid underflow, sending " + copy.size() + " points.");
                     frameSize = copy.size();
                 }
+
+
 //                if (pointRate != 0) {
 //                    log("Sending a frame consisting of " + frameSize + " points. At " + pointRate + " pps, it should "
 //                        + "take " + 1000 * (frameSize / pointRate) + " ms.");
@@ -400,8 +423,7 @@ public class EtherdreamCommunicationThread extends Thread
             @Override
             State stateWhenAck(EtherdreamCommunicationThread thread)
             {
-                return thread.hasFrame() ? SEND_DATA
-                    : STOP;
+                return thread.hasFrame() ? SEND_DATA : STOP;
             }
 
             @Override
