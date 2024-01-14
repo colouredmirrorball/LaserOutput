@@ -2,10 +2,11 @@ package be.cmbsoft.laseroutput;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+
 import be.cmbsoft.ilda.IldaFrame;
 import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.ilda.IldaRenderer;
-import org.junit.jupiter.api.Test;
 
 class DwellTest
 {
@@ -21,6 +22,7 @@ class DwellTest
         renderer.endDraw();
         IldaFrame       currentFrame = renderer.getCurrentFrame();
         List<IldaPoint> points       = currentFrame.getPoints();
+        System.out.println(points.size());
     }
 
 }
