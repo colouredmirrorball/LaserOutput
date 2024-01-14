@@ -24,20 +24,27 @@ import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PREPARED
 public class EtherdreamCommunicationThread extends Thread
 {
     private static final EtherdreamWriteDataCommand EMPTY_FRAME = generateEmptyFrame();
+    private final        InetAddress                address;
+    private final        Etherdream                 etherdream;
+    private final        int                        maxBufferSize;
     private              long                       lastProjectionTime;
+    private              boolean                    halted;
+    private              Socket                     socket;
+    private              OutputStream               output;
+    private              InputStream                input;
+    private              int                        targetPps;
+    private              List<IldaPoint>            nextFrame;
+    private              List<IldaPoint>            currentFrame;
+    private              State                      state       = State.INIT;
+    private              EtherdreamResponse         lastResponse;
 
-    private final InetAddress        address;
-    private final Etherdream         etherdream;
-    private final int                maxBufferSize;
-    private       boolean            halted;
-    private       Socket             socket;
-    private       OutputStream       output;
-    private       InputStream        input;
-    private       int                targetPps;
-    private       List<IldaPoint>    nextFrame;
-    private       List<IldaPoint>    currentFrame;
-    private       State              state = State.INIT;
-    private       EtherdreamResponse lastResponse;
+    EtherdreamCommunicationThread(InetAddress address, Etherdream etherdream)
+    {
+        setName("EtherdreamCommunicationThread");
+        this.address = address;
+        this.etherdream = etherdream;
+        this.maxBufferSize = etherdream.getBroadcast().getBufferCapacity();
+    }
 
     private static EtherdreamWriteDataCommand generateEmptyFrame()
     {
@@ -47,14 +54,6 @@ public class EtherdreamCommunicationThread extends Thread
             blankedPoints.add(new IldaPoint(0, 0, 0, 0, 0, 0, true));
         }
         return new EtherdreamWriteDataCommand(blankedPoints);
-    }
-
-    EtherdreamCommunicationThread(InetAddress address, Etherdream etherdream)
-    {
-        setName("EtherdreamCommunicationThread");
-        this.address = address;
-        this.etherdream = etherdream;
-        this.maxBufferSize = etherdream.getBroadcast().getBufferCapacity();
     }
 
     @Override
