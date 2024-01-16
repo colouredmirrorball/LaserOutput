@@ -8,6 +8,7 @@ import java.util.Optional;
 import be.cmbsoft.ilda.IldaFrame;
 import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.ilda.IldaRenderer;
+import processing.core.PVector;
 
 /**
  * @author Florian Created on 27/01/2020
@@ -23,6 +24,8 @@ public abstract class LaserOutput extends Thread
     private       int                lastFramePointCount  = 0;
     private       boolean            interrupted          = false;
     private       List<IldaPoint>    points               = new ArrayList<>();
+    private final Bounds             bounds               = new Bounds();
+    private       float              intensityFactor      = 1;
 
     protected LaserOutput()
     {
@@ -116,7 +119,72 @@ public abstract class LaserOutput extends Thread
         {
             points = option.transform(points);
         }
+        points = applyBounds(points);
+        for (IldaPoint point : points)
+        {
+            int   colour = point.getColour();
+            float red    = (colour >> 16) & 0xff;
+            float green  = (colour >> 8) & 0xff;
+            float blue   = (colour) & 0xff;
+            point.setColour((int) (red * intensityFactor), (int) (green * intensityFactor),
+                (int) (blue * intensityFactor));
+        }
+
         return points;
+    }
+
+    private List<IldaPoint> applyBounds(List<IldaPoint> points)
+    {
+
+        /*
+         * 4-points polynomial mapping algorithm courtesy of Daniele Mortari and David Arnas:
+         * Mortari, D.; Arnas, D. Bijective Mapping Analysis to Extend the Theory of Functional Connections to
+         * Non-Rectangular 2-Dimensional Domains. Mathematics 2020, 8, 1593. https://doi.org/10.3390/math8091593
+         */
+
+        List<IldaPoint> output = new ArrayList<>();
+        for (IldaPoint point : points)
+        {
+            PVector   position = point.getPosition();
+            float     newX     = calculateMapX(position.x, position.y);
+            float     newY     = calculateMapY(position.x, position.y);
+            IldaPoint newPoint = new IldaPoint(point);
+            newPoint.setPosition(newX, newY, point.getPosition().z);
+            output.add(newPoint);
+        }
+        return output;
+    }
+
+    private float calculateMapX(float a, float b)
+    {
+        return calculateMap(a, b, bounds.xk);
+    }
+
+    private float calculateMapY(float a, float b)
+    {
+        return calculateMap(a, b, bounds.yk);
+    }
+
+    private float calculateMap(float a, float b, float[] xk)
+    {
+        float sum = 0;
+        for (int k = 0; k < 4; k++)
+        {
+            sum += xk[k] * fk(a, b, k);
+        }
+        return sum;
+    }
+
+    private float fk(float a, float b, int k)
+    {
+        return switch (k)
+            {
+                case 0 -> (1 - a - b + a * b) * 0.25f;
+                case 1 -> (1 + a - b - a * b) * 0.25f;
+                case 2 -> (1 + a + b + a * b) * 0.25f;
+                case 3 -> (1 - a + b - a * b) * 0.25f;
+                default -> throw new IllegalArgumentException();
+            };
     }
 
     public abstract void project(List<IldaPoint> points);
@@ -168,6 +236,16 @@ public abstract class LaserOutput extends Thread
     public enum Mode
     {
         STATIC_FPS, STATIC_PPS
+    }
+
+    public Bounds getBounds()
+    {
+        return bounds;
+    }
+
+    public void setIntensity(float intensity)
+    {
+        this.intensityFactor = intensity / 255f;
     }
 
 }
