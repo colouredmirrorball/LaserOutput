@@ -57,6 +57,7 @@ public class Bounds
 
     private void update()
     {
+        // TODO: validate (ensure vectors inside window and lower left is actually lower left etc.)
         xk[0] = lowerLeft == null ? -1 : lowerLeft.x;
         xk[1] = lowerRight == null ? 1 : lowerRight.x;
         xk[2] = upperRight == null ? 1 : upperRight.x;

@@ -238,6 +238,12 @@ public abstract class LaserOutput extends Thread
         STATIC_FPS, STATIC_PPS
     }
 
+    /**
+     * The Bounds, or Boundaries, are four vectors that define the quadrilateral figure in which projection occurs.
+     * Note that the figure does not need to be regular.
+     *
+     * @return object containing the corners of the output shape
+     */
     public Bounds getBounds()
     {
         return bounds;
