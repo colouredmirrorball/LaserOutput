@@ -1,10 +1,13 @@
 package be.cmbsoft.laseroutput;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import processing.core.PVector;
 
 public class Bounds
 {
+    @JsonIgnore
     float[] xk = new float[4];
+    @JsonIgnore
     float[] yk = new float[4];
     private PVector upperLeft;
     private PVector upperRight;
