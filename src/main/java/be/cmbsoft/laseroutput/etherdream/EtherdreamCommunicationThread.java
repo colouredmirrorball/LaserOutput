@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import be.cmbsoft.ilda.IldaPoint;
-
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
 import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PLAYING;
@@ -37,6 +36,7 @@ public class EtherdreamCommunicationThread extends Thread
     private              List<IldaPoint>            currentFrame;
     private              State                      state       = State.INIT;
     private              EtherdreamResponse         lastResponse;
+    private              long                       lastResponseTime;
 
     EtherdreamCommunicationThread(InetAddress address, Etherdream etherdream)
     {
@@ -149,6 +149,7 @@ public class EtherdreamCommunicationThread extends Thread
         {
             EtherdreamResponse response = processResponse(buffer.array());
             lastResponse = response;
+
             EtherdreamResponseStatus status = EtherdreamResponseStatus.get(response.getResponse().state);
             state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this) : state.stateWhenNak(this);
             if (status != EtherdreamResponseStatus.ACK)
@@ -164,11 +165,22 @@ public class EtherdreamCommunicationThread extends Thread
                 //Somebody could have requested a stop during previous steps
                 state = State.STOP;
             }
+            long now = System.nanoTime();
+            if (state == State.CHECK_STATUS && PLAYING == lastResponse.getStatus().getPlaybackState()) {
+                long interval = now - lastResponseTime;
+                if (interval < 25000000) {
+                    sleep(25);
+                }
+            }
+            lastResponseTime = now;
             sendCommand();
         }
         catch (IllegalStateException e)
         {
             logException(e);
+        } catch (InterruptedException e) {
+            interrupt();
+            halted = true;
         }
     }
 
@@ -230,7 +242,8 @@ public class EtherdreamCommunicationThread extends Thread
     private boolean willNextFrameOverflowBuffer()
     {
         int bufferFullness = lastResponse.getStatus().getBufferFullness();
-        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness;
+        // arbitrary have a margin of 250 pts without any good reason
+        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness - 250;
     }
 
     enum State
