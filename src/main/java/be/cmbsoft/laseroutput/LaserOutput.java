@@ -57,6 +57,11 @@ public abstract class LaserOutput extends Thread
         }
     }
 
+    public int getIntensity()
+    {
+        return (int) (intensityFactor * 255);
+    }
+
     private long getSleepTime(long lastTime, int lastFramePointCount)
     {
         long currentTime = System.currentTimeMillis();
@@ -196,10 +201,12 @@ public abstract class LaserOutput extends Thread
 
     public void project(IldaRenderer renderer)
     {
-        Optional.ofNullable(renderer)
+        if (!interrupted) {
+            Optional.ofNullable(renderer)
                 .map(IldaRenderer::getCurrentFrame)
                 .ifPresent(frame -> this.points = frame.getPoints());
-        project(points);
+            project(points);
+        }
     }
 
     public Mode getMode()

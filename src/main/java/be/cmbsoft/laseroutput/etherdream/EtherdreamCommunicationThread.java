@@ -154,7 +154,7 @@ public class EtherdreamCommunicationThread extends Thread
             state = status == EtherdreamResponseStatus.ACK ? state.stateWhenAck(this) : state.stateWhenNak(this);
             if (status != EtherdreamResponseStatus.ACK)
             {
-                log("We got a NAK!");
+                log("We got a NAK! From " + etherdream.getBroadcast().getMac());
                 log(response.toString());
             }
 //                        if (oldState != state) {
