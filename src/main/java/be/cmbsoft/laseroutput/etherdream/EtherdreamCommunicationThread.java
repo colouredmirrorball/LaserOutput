@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import be.cmbsoft.ilda.IldaPoint;
+
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.log;
 import static be.cmbsoft.laseroutput.etherdream.Etherdream.logException;
 import static be.cmbsoft.laseroutput.etherdream.EtherdreamPlaybackState.PLAYING;
@@ -405,11 +406,12 @@ public class EtherdreamCommunicationThread extends Thread
             EtherdreamCommand generateMessage(EtherdreamCommunicationThread thread)
             {
                 List<IldaPoint> frame = thread.getCurrentFrameAndClear();
+                /*
                 if (frame == null && thread.lastProjectionTime < System.nanoTime() + 1000000000)
                 {
                     return EMPTY_FRAME;
                 }
-
+*/
                 List<IldaPoint> copy      = frame == null ? Collections.emptyList() : new ArrayList<>(frame);
                 int             frameSize = frame == null ? 0 : frame.size();
                 //float           pointRate = thread.lastResponse.getStatus().getPointRate();
