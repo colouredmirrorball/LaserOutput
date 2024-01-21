@@ -66,10 +66,10 @@ public class Bounds
         xk[2] = upperRight == null ? 1 : upperRight.x;
         xk[3] = upperLeft == null ? -1 : upperLeft.x;
 
-        yk[0] = lowerLeft == null ? -1 : lowerLeft.y;
-        yk[1] = lowerRight == null ? -1 : lowerRight.y;
-        yk[2] = upperRight == null ? 1 : upperRight.y;
-        yk[3] = upperLeft == null ? 1 : upperLeft.y;
+        yk[0] = lowerLeft == null ? -1 : -lowerLeft.y;
+        yk[1] = lowerRight == null ? -1 : -lowerRight.y;
+        yk[2] = upperRight == null ? 1 : -upperRight.y;
+        yk[3] = upperLeft == null ? 1 : -upperLeft.y;
     }
 
 }

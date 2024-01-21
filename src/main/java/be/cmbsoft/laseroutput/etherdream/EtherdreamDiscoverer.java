@@ -59,15 +59,15 @@ public enum EtherdreamDiscoverer implements Runnable
                 EtherdreamBroadcast broadcast = new EtherdreamBroadcast(buffer);
                 String              mac       = broadcast.getMac();
                 synchronized (devices) {
-                    log("found device in discoverer: " + mac);
                     Etherdream etherdream = devices.get(mac);
                     if (etherdream == null) {
                         log("Found an Etherdream: " + mac);
                         devices.put(mac, new Etherdream(address, broadcast));
-                        log("Etherdream details:\n Buffer capacity: " + broadcast.getBufferCapacity() + "\n Max point "
-                            + "rate: " + broadcast.getMaxPointRate() + "\n Hardware revision number: "
-                            + broadcast.getHardwareRevision() + "\n Software revision number: "
-                            + broadcast.getSoftwareRevision());
+                        log("Etherdream details:\n  " +
+                            "Buffer capacity: \t\t\t" + broadcast.getBufferCapacity() +
+                            "\n  Max point rate: \t\t\t" + broadcast.getMaxPointRate() +
+                            "\n  Hardware revision number: " + broadcast.getHardwareRevision() +
+                            "\n  Software revision number: " + broadcast.getSoftwareRevision());
 
                     } else {
                         etherdream.update(broadcast);

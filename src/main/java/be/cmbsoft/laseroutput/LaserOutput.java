@@ -8,6 +8,7 @@ import java.util.Optional;
 import be.cmbsoft.ilda.IldaFrame;
 import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.ilda.IldaRenderer;
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
@@ -26,6 +27,7 @@ public abstract class LaserOutput extends Thread
     private       List<IldaPoint>    points               = new ArrayList<>();
     private final Bounds             bounds               = new Bounds();
     private       float              intensityFactor      = 1;
+    private       PGraphics          safetyZone           = null;
 
     protected LaserOutput()
     {
@@ -124,18 +126,30 @@ public abstract class LaserOutput extends Thread
         {
             points = option.transform(points);
         }
-        points = applyBounds(points);
         for (IldaPoint point : points)
         {
-            int   colour = point.getColour();
-            float red    = (colour >> 16) & 0xff;
-            float green  = (colour >> 8) & 0xff;
-            float blue   = (colour) & 0xff;
-            point.setColour((int) (red * intensityFactor), (int) (green * intensityFactor),
-                (int) (blue * intensityFactor));
-        }
+            int   colour             = point.getColour();
+            float theIntensityFactor = intensityFactor;
+            theIntensityFactor *= getSafetyZoneIntensity(point);
 
-        return points;
+            float red   = (colour >> 16) & 0xff;
+            float green = (colour >> 8) & 0xff;
+            float blue  = (colour) & 0xff;
+            point.setColour((int) (red * theIntensityFactor), (int) (green * theIntensityFactor),
+                (int) (blue * theIntensityFactor));
+        }
+        return applyBounds(points);
+    }
+
+    private float getSafetyZoneIntensity(IldaPoint point)
+    {
+        return safetyZone == null ? 1f : (safetyZone.get((int) ((point.getX() + 1) * (safetyZone.width - 1) / 2),
+            (int) ((-point.getY() + 1) * (safetyZone.height - 1) / 2)) & 0xff) / 255f;
+    }
+
+    public void setSafetyZone(PGraphics safetyZone)
+    {
+        this.safetyZone = safetyZone;
     }
 
     private List<IldaPoint> applyBounds(List<IldaPoint> points)
@@ -170,12 +184,12 @@ public abstract class LaserOutput extends Thread
         return calculateMap(a, b, bounds.yk);
     }
 
-    private float calculateMap(float a, float b, float[] xk)
+    private float calculateMap(float a, float b, float[] xyk)
     {
         float sum = 0;
         for (int k = 0; k < 4; k++)
         {
-            sum += xk[k] * fk(a, b, k);
+            sum += xyk[k] * fk(a, b, k);
         }
         return sum;
     }
