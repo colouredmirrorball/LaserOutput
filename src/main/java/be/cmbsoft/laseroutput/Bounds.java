@@ -14,6 +14,10 @@ public class Bounds
     private PVector lowerLeft;
     private PVector lowerRight;
 
+    public Bounds() {
+        update();
+    }
+
     public PVector getUpperLeft()
     {
         return upperLeft;
