@@ -61,7 +61,7 @@ public enum EtherdreamDiscoverer implements Runnable
                 synchronized (devices) {
                     Etherdream etherdream = devices.get(mac);
                     if (etherdream == null) {
-                        log("Found an Etherdream: " + mac);
+                        log("Found an Etherdream: " + mac + " at " + address);
                         devices.put(mac, new Etherdream(address, broadcast));
                         log("Etherdream details:\n  " +
                             "Buffer capacity: \t\t\t" + broadcast.getBufferCapacity() +
