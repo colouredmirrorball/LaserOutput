@@ -67,4 +67,9 @@ public class EtherdreamOutput extends LaserOutput
         return this;
     }
 
+    public Collection<Etherdream> getDetectedDevices()
+    {
+        return devices.values();
+    }
+
 }
