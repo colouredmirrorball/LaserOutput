@@ -2,6 +2,7 @@ package be.cmbsoft.laseroutput.etherdream;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import be.cmbsoft.ilda.IldaPoint;
@@ -11,6 +12,7 @@ public class Etherdream
     private final EtherdreamCommunicationThread thread;
     private       EtherdreamBroadcast           broadcast;
     private       boolean                       connectionFailed = false;
+    private LocalDateTime lastSeen;
 
 
     public Etherdream(InetAddress address, EtherdreamBroadcast broadcast)
@@ -28,6 +30,7 @@ public class Etherdream
     public void update(EtherdreamBroadcast broadcast)
     {
         this.broadcast = broadcast;
+        this.lastSeen = LocalDateTime.now();
     }
 
     public void project(List<IldaPoint> points, int pps)
@@ -77,6 +80,16 @@ public class Etherdream
     public String getMac()
     {
         return broadcast.getMac();
+    }
+
+    /**
+     * A device is considered "stale" if a status update broadcast was not received within ten seconds.
+     *
+     * @return whether device is stale
+     */
+    public boolean stale()
+    {
+        return lastSeen == null || lastSeen.plusSeconds(10).isBefore(LocalDateTime.now());
     }
 
 }
