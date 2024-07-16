@@ -74,4 +74,9 @@ public class Etherdream
         exception.printStackTrace();
     }
 
+    public String getMac()
+    {
+        return broadcast.getMac();
+    }
+
 }
