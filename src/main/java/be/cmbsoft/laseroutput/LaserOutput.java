@@ -270,6 +270,11 @@ public abstract class LaserOutput extends Thread
         return bounds;
     }
 
+    /**
+     * Set “master” intensity (0-255)
+     *
+     * @param intensity
+     */
     public void setIntensity(float intensity)
     {
         this.intensityFactor = intensity / 255f;
