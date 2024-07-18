@@ -3,6 +3,7 @@ package be.cmbsoft.laseroutput;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import be.cmbsoft.ilda.IldaPoint;
 import be.cmbsoft.laseroutput.etherdream.Etherdream;
@@ -18,6 +19,7 @@ public class EtherdreamOutput extends LaserOutput
     {
         EtherdreamDiscoverer.startIfYouWerent();
         devices = EtherdreamDiscoverer.getDevices();
+        setName("Etherdream output thread");
     }
 
     @Override
@@ -48,7 +50,8 @@ public class EtherdreamOutput extends LaserOutput
     @Override
     public boolean isConnected()
     {
-        return alias == null ? !devices.isEmpty() : devices.containsKey(alias);
+        return alias == null ? !devices.isEmpty() :
+            Optional.ofNullable(devices.get(alias)).map(device -> !device.stale()).orElse(false);
     }
 
     public int getDetectedDevicesAmount()
@@ -64,6 +67,7 @@ public class EtherdreamOutput extends LaserOutput
     public EtherdreamOutput setAlias(String alias)
     {
         this.alias = alias;
+        setName("Etherdream output thread for " + alias);
         return this;
     }
 
