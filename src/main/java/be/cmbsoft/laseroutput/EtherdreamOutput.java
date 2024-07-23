@@ -20,10 +20,11 @@ public class EtherdreamOutput extends LaserOutput
         EtherdreamDiscoverer.startIfYouWerent();
         devices = EtherdreamDiscoverer.getDevices();
         setName("Etherdream output thread");
+        start();
     }
 
     @Override
-    public void project(List<IldaPoint> points)
+    public void projectImpl(List<IldaPoint> points)
     {
         List<IldaPoint> transformedPoints = transform(points);
         synchronized (devices)

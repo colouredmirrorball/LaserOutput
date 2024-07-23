@@ -195,7 +195,7 @@ public class EtherdreamCommunicationThread extends Thread
         }
     }
 
-    public void halt() throws IOException
+    public void halt()
     {
         log("Requested to halt");
         halted = true;

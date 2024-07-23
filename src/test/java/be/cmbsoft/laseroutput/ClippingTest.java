@@ -45,7 +45,7 @@ class ClippingTest
         List<IldaPoint> pointList = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(pointList));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(pointList));
 
     }
 
@@ -72,7 +72,7 @@ class ClippingTest
         List<IldaPoint> finalPoints = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -95,7 +95,7 @@ class ClippingTest
         List<IldaPoint> finalPoints = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -118,7 +118,7 @@ class ClippingTest
         List<IldaPoint> finalPoints = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -140,7 +140,7 @@ class ClippingTest
         List<IldaPoint> finalPoints = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -162,7 +162,7 @@ class ClippingTest
         List<IldaPoint> finalPoints = optimiser.optimiseSegment(points);
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -185,7 +185,7 @@ class ClippingTest
         assertEquals(1, finalPoints.size());
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -208,7 +208,7 @@ class ClippingTest
         assertEquals(0, finalPoints.size());
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -232,7 +232,7 @@ class ClippingTest
         assertEquals(0, finalPoints.size());
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 
@@ -256,7 +256,7 @@ class ClippingTest
         assertEquals(2, finalPoints.size());
 
         LsxOscOutput output = new LsxOscOutput(1, 10, "127.0.0.1", 10000);
-        Assertions.assertDoesNotThrow(() -> output.project(finalPoints));
+        Assertions.assertDoesNotThrow(() -> output.projectImpl(finalPoints));
 
     }
 

@@ -35,6 +35,7 @@ public class LsxOscOutput extends LaserOutput {
         b = ByteBuffer.allocate(45068); //largest point count LSX can handle is 4096
         b.order(ByteOrder.LITTLE_ENDIAN);
         setName("LSX OSC output");
+        start();
     }
 
     public static float map(float value, float start1, float stop1, float start2, float stop2) {
@@ -42,7 +43,7 @@ public class LsxOscOutput extends LaserOutput {
     }
 
     @Override
-    public synchronized void project(List<IldaPoint> points)
+    public synchronized void projectImpl(List<IldaPoint> points)
     {
         int pointCount = points.size();
         b.position(0);

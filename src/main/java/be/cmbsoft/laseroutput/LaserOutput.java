@@ -48,7 +48,7 @@ public abstract class LaserOutput extends Thread
             {
                 if (!paused)
                 {
-                    project(points);
+                    projectImpl(points);
                     lastFramePointCount = points.size();
                 }
                 long sleepTime = getSleepTime(lastTime, lastFramePointCount);
@@ -137,11 +137,16 @@ public abstract class LaserOutput extends Thread
         this.safetyZone = safetyZone;
     }
 
-    public abstract void project(List<IldaPoint> points);
+    protected abstract void projectImpl(List<IldaPoint> points);
+
+    public void project(List<IldaPoint> points)
+    {
+        this.points = points;
+    }
 
     public void project(IldaFrame frame)
     {
-        Optional.ofNullable(frame).ifPresent(f -> project(f.getPoints()));
+        Optional.ofNullable(frame).ifPresent(f -> this.points = frame.getPoints());
     }
 
     public void project(IldaRenderer renderer)
@@ -151,7 +156,7 @@ public abstract class LaserOutput extends Thread
             Optional.ofNullable(renderer)
                 .map(IldaRenderer::getCurrentFrame)
                 .ifPresent(frame -> this.points = frame.getPoints());
-            project(points);
+//            projectImpl(points);
         }
     }
 
@@ -181,7 +186,7 @@ public abstract class LaserOutput extends Thread
      */
     public void sendEmptyFrame()
     {
-        project(Collections.emptyList());
+        projectImpl(Collections.emptyList());
     }
 
     public abstract boolean isConnected();

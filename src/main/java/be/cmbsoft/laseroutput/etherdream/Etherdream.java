@@ -1,6 +1,5 @@
 package be.cmbsoft.laseroutput.etherdream;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,11 +43,7 @@ public class Etherdream
 
     public void stop()
     {
-        try {
-            thread.halt();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        thread.halt();
     }
 
     public boolean connectionFailed()
