@@ -34,10 +34,12 @@ public class Etherdream
 
     public void project(List<IldaPoint> points, int pps)
     {
+        /*
         if (thread.isHalted())
         {
             thread.start();
         }
+         */
         thread.project(points, pps);
     }
 
