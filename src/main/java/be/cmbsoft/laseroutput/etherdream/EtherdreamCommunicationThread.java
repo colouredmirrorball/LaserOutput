@@ -157,6 +157,7 @@ public class EtherdreamCommunicationThread extends Thread
             {
                 log("We got a NAK! From " + etherdream.getBroadcast().getMac());
                 log(response.toString());
+                log("Next state: " + state);
             }
 //                        if (oldState != state) {
 //                            log("State updated from " + oldState + " to " + state);
@@ -243,8 +244,8 @@ public class EtherdreamCommunicationThread extends Thread
     private boolean willNextFrameOverflowBuffer()
     {
         int bufferFullness = lastResponse.getStatus().getBufferFullness();
-        // arbitrary have a margin of 250 pts without any good reason
-        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness - 250;
+        // arbitrary have a margin of 1000 pts without any good reason
+        return currentFrame != null && currentFrame.size() >= maxBufferSize - bufferFullness - 1000;
     }
 
     enum State
@@ -377,7 +378,7 @@ public class EtherdreamCommunicationThread extends Thread
                 }
                 if (thread.willNextFrameOverflowBuffer())
                 {
-//                    log("Overflow imminent");
+                    log("Overflow imminent");
                     // Keep checking status until buffer no longer full
                     return CHECK_STATUS;
                 }
