@@ -11,7 +11,7 @@ class EtherdreamOutputTest extends AbstractOutputTest
     {
         IldaFrame ildaFrame = generateCircle();
         System.out.println("There be a frame with " + ildaFrame.getPointCount() + " points.");
-        EtherdreamOutput output = new EtherdreamOutput().setAlias("6E851F3F2177");
+        EtherdreamOutput output = new EtherdreamOutput().setAlias("D88039AAE23F");
         long             now    = System.currentTimeMillis();
         while (output.getDetectedDevicesAmount() == 0)
         {
